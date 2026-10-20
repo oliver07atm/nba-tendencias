@@ -124,3 +124,7 @@ En **Datos → Importar estadísticas NBA desde CSV**, selecciona jugadores, equ
 Con el guardado activado, IndexedDB lo recupera al volver a abrir la web. **Exportar historial JSON** permite trasladarlo al iPhone y cargarlo desde **Importar JSON o CSV**. El guardado depende del navegador y no sustituye una copia JSON de seguridad. La demostración permanece disponible y los datos importados no se publican en GitHub.
 
 Consulta la [guía de uso sin programar](docs/importacion-personal.md). Las actualizaciones de estadísticas individuales siguen desactivadas; esta función solo procesa archivos seleccionados por el usuario. La actualización del calendario real es independiente y no toca IndexedDB.
+
+## Plantillas parciales y navegación real
+
+React Router con HashRouter permite enlaces directos a partidos, jugadores, equipos y análisis con filtros; Atrás/Adelante y «Volver al partido» conservan el contexto. La base independiente de plantillas 2026-27 contiene por ahora **solo dos pertenencias contrastadas**, no las 30 plantillas completas. Datos incluye actualización manual con fuentes e IDs; las asociaciones históricas siguen en un apartado secundario. [Alcance real, fuentes, límites y guía de uso](docs/plantillas-y-navegacion.md). El historial y la actualización gratuita del calendario se conservan.

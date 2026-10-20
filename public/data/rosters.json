@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "season": "2026-27",
+  "teams": [
+    {
+      "id": "ATL",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612737",
+      "players": []
+    },
+    {
+      "id": "BOS",
+      "complete": false,
+      "checkedAt": "2026-10-20T16:45:19.307Z",
+      "sourceUrl": "https://www.nba.com/team/1610612738",
+      "players": [
+        {
+          "name": "Jayson Tatum",
+          "ids": {
+            "nba": "1628369",
+            "espn": "4065648"
+          },
+          "membership": {
+            "status": "reviewed",
+            "checkedAt": "2026-10-20T16:45:19.307Z",
+            "sourceUrl": "https://www.nba.com/player/1628369/jayson-tatum"
+          },
+          "identity": {
+            "status": "reviewed",
+            "checkedAt": "2026-10-20T16:45:19.307Z",
+            "birthDate": "1998-03-03",
+            "nbaUrl": "https://www.nba.com/player/1628369/jayson-tatum",
+            "espnUrl": "https://www.espn.com/nba/player/_/id/4065648/jayson-tatum"
+          }
+        }
+      ]
+    },
+    {
+      "id": "BKN",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612751",
+      "players": []
+    },
+    {
+      "id": "CHA",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612766",
+      "players": []
+    },
+    {
+      "id": "CHI",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612741",
+      "players": []
+    },
+    {
+      "id": "CLE",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612739",
+      "players": []
+    },
+    {
+      "id": "DAL",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612742",
+      "players": []
+    },
+    {
+      "id": "DEN",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612743",
+      "players": []
+    },
+    {
+      "id": "DET",
+      "complete": false,
+      "checkedAt": "2026-10-20T16:45:19.307Z",
+      "sourceUrl": "https://www.nba.com/team/1610612765",
+      "players": [
+        {
+          "name": "Cade Cunningham",
+          "ids": {
+            "nba": "1630595",
+            "espn": "4432166"
+          },
+          "membership": {
+            "status": "reviewed",
+            "checkedAt": "2026-10-20T16:45:19.307Z",
+            "sourceUrl": "https://www.nba.com/player/1630595/cade-cunningham"
+          },
+          "identity": {
+            "status": "reviewed",
+            "checkedAt": "2026-10-20T16:45:19.307Z",
+            "birthDate": "2001-09-25",
+            "nbaUrl": "https://www.nba.com/player/1630595/cade-cunningham",
+            "espnUrl": "https://www.espn.com/nba/player/_/id/4432166/cade-cunningham"
+          }
+        }
+      ]
+    },
+    {
+      "id": "GSW",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612744",
+      "players": []
+    },
+    {
+      "id": "HOU",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612745",
+      "players": []
+    },
+    {
+      "id": "IND",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612754",
+      "players": []
+    },
+    {
+      "id": "LAC",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612746",
+      "players": []
+    },
+    {
+      "id": "LAL",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612747",
+      "players": []
+    },
+    {
+      "id": "MEM",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612763",
+      "players": []
+    },
+    {
+      "id": "MIA",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612748",
+      "players": []
+    },
+    {
+      "id": "MIL",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612749",
+      "players": []
+    },
+    {
+      "id": "MIN",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612750",
+      "players": []
+    },
+    {
+      "id": "NOP",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612740",
+      "players": []
+    },
+    {
+      "id": "NYK",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612752",
+      "players": []
+    },
+    {
+      "id": "OKC",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612760",
+      "players": []
+    },
+    {
+      "id": "ORL",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612753",
+      "players": []
+    },
+    {
+      "id": "PHI",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612755",
+      "players": []
+    },
+    {
+      "id": "PHX",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612756",
+      "players": []
+    },
+    {
+      "id": "POR",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612757",
+      "players": []
+    },
+    {
+      "id": "SAC",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612758",
+      "players": []
+    },
+    {
+      "id": "SAS",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612759",
+      "players": []
+    },
+    {
+      "id": "TOR",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612761",
+      "players": []
+    },
+    {
+      "id": "UTA",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612762",
+      "players": []
+    },
+    {
+      "id": "WAS",
+      "complete": false,
+      "checkedAt": null,
+      "sourceUrl": "https://www.nba.com/team/1610612764",
+      "players": []
+    }
+  ]
+}
