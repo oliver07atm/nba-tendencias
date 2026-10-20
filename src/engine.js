@@ -64,11 +64,12 @@ export function parseImport(text,name){
  const parsed=Papa.parse(text,{header:true,skipEmptyLines:true});if(parsed.errors.length)throw Error('CSV inválido: '+parsed.errors[0].message);
  return validateDataset({meta:{mode:'imported',source:name},schedule:[],records:parsed.data});
 }
-export function detectTrends(dataset,limit=20,{currentTeams=null}={}){
+export function detectTrends(dataset,limit=20,{currentTeams=null,excludedPlayers=new Set()}={}){
  const teams=new Set(dataset.schedule.flatMap(g=>[g.home,g.away]));
  const groups=new Map();dataset.records.forEach(r=>{const key=r.kind+':'+entityKey(r);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
  return [...groups.values()].flatMap(rows=>{
  rows.sort((a,b)=>new Date(b.date)-new Date(a.date));
+ if(rows[0].kind==='player'&&excludedPlayers.has(entityKey(rows[0])))return [];
  const team=rows[0].kind==='player'&&currentTeams?currentTeams.get(entityKey(rows[0])):rows[0].team;
  if(!team||!teams.has(team))return [];
  const stats=rows[0].kind==='player'?['points','rebounds','assists','threeMade','pra']:['points','allowed','threeMade','rebounds','margin'];

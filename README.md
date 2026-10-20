@@ -132,3 +132,7 @@ Las 30 listas oficiales 2026-27 se contrastaron el 20 de octubre de 2026: 519 ju
 En **Datos → Plantillas actuales → Importar plantillas JSON**, selecciona el archivo privado, revisa la vista previa y guárdalo en el navegador. Se utiliza una base IndexedDB independiente; los históricos personales no se reemplazan. Los jugadores actuales sin estadísticas enlazadas permanecen visibles. Se distingue a los históricos con otro equipo confirmado de los pendientes de verificar. Las revisiones antiguas se avisan sin ocultar jugadores.
 
 React Router con HashRouter conserva los enlaces a partidos y análisis, los filtros y Atrás/Adelante. No se modifica la navegación en esta actualización. [Recuento de los 30 equipos, fuentes, importación y limitaciones](docs/estado-plantillas.md). El calendario gratuito y la demostración se mantienen.
+
+## Identidades y retiradas sin modificar el historial
+
+**Datos → Identidades y estados de jugadores** permite importar y exportar correcciones JSON (10 MB), consultar el informe de enlaces y revisar estados activo/retirado/desconocido con fuente y fecha. Las correcciones se guardan en una tercera base local, sin sustituir los históricos ni las plantillas. Solo las retiradas confirmadas se excluyen del selector y de las tendencias individuales; los resultados de equipos conservan todos sus registros. [Guía de importación, estados, evidencias y formato](docs/identidades-y-estados.md).
