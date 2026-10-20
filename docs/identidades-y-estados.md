@@ -47,4 +47,8 @@ Las pruebas comparan resultados completos de tendencias de equipos, incluidos po
 
 Cada identidad contiene `nba`, `espn`, `name`, `birthDate`, `checkedAt`, `nbaUrl` y `espnUrl`. Ambos perfiles deben acreditar la misma persona y fecha de nacimiento. Cada estado contiene `key` (`nba:player:ID` o `espn:player:ID`), `name`, `state`, `checkedAt`, `evidenceUrl` y, opcionalmente, `note`. No se importan registros estadísticos en este formato.
 
+Las evidencias de identidad admiten los perfiles oficiales de ESPN en sus ediciones de Reino Unido, Australia, India, Filipinas, Singapur y Brasil, además de ESPN.com y África. Se conserva la URL consultada, sin sustituirla por una URL que no se haya verificado. También se admiten perfiles de baloncesto universitario de ESPN con el mismo ID de atleta: un perfil universitario no acredita pertenencia a una plantilla NBA ni una temporada de debut. El nombre y el nacimiento deben contrastarse con el perfil NBA individual. Los dominios, rutas e IDs siguen validándose; no se aceptan otros deportes ni dominios parecidos.
+
+Una discrepancia de nacimiento o un perfil inaccesible deja la identidad pendiente; no equivale a ausencia de estadísticas. Para añadir exclusivamente enlaces de identidad, el archivo debe llevar `statuses: []`: se combinarán las identidades y se conservarán todos los estados de actividad o retirada existentes.
+
 La revisión preparada y sus fuentes se entregan como archivo privado separado del código. No se publican esos archivos en GitHub ni se activa una API de pago o una extracción automática nueva. El calendario de BALLDONTLIE y las actualizaciones de estadísticas individuales desactivadas mantienen su configuración anterior.

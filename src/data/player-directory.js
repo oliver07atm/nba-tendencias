@@ -7,7 +7,13 @@ const sameReview=(a,b)=>Object.keys(a).length===Object.keys(b).length&&Object.ke
 const name=v=>typeof v==='string'&&v.trim()&&v.length<=100;
 function url(value,hosts,path){try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&hosts.includes(u.hostname)&&path(u);}catch{return false;}}
 const nbaUrl=(value,key)=>url(value,['nba.com','www.nba.com'],u=>new RegExp('^/player/'+key+'(?:/|$)').test(u.pathname));
-const espnUrl=(value,key)=>url(value,['espn.com','www.espn.com','africa.espn.com'],u=>new RegExp('^/nba/player/(?:[a-z]+/)?_/id/'+key+'(?:/|$)').test(u.pathname)||/^\/nba\/player(?:\/(?:bio|stats|gamelog|news|splits))?\/?$/.test(u.pathname)&&u.searchParams.get('id')===key);
+// ESPN uses the same athlete ID in its NBA and college profiles. Keep an explicit
+// host/path allowlist: a regional URL is evidence, never an automatic name match.
+const espnProfileHosts=['espn.com','www.espn.com','africa.espn.com','www.espn.co.uk','www.espn.com.au','www.espn.in','www.espn.ph','www.espn.com.sg','www.espn.com.br'];
+const espnUrl=(value,key)=>url(value,espnProfileHosts,u=>{
+ const root='/(?:nba|mens-college-basketball)/(?:player|jogador)|/basquete/universitario-masculino/jogador';
+ return new RegExp('^(?:'+root+')/(?:[a-z]+/)?_/id/'+key+'(?:/|$)').test(u.pathname)||new RegExp('^(?:'+root+')(?:/(?:bio|stats|gamelog|news|splits))?/?$').test(u.pathname)&&u.searchParams.get('id')===key;
+});
 export const statusEvidence=value=>url(value,['nba.com','www.nba.com','espn.com','www.espn.com','africa.espn.com'],u=>u.hostname.endsWith('nba.com')?/^\/(?:news\/|[a-z]+\/news\/|player\/)/.test(u.pathname):/^\/nba\/(?:story\/|player\/)/.test(u.pathname));
 export function validateDirectory(value){
  if(value?.version!==1||value.type!=='nba-player-corrections'||!Array.isArray(value.identities)||!Array.isArray(value.statuses)||value.identities.length>5000||value.statuses.length>5000||'records'in value||'teams'in value)throw Error('Se necesita un JSON de correcciones de identidad y estados; no un historial ni una plantilla.');

@@ -23,6 +23,17 @@ test('Rechaza cruces ambiguos, fuentes engañosas y fechas de nacimiento imposib
  const p=proof();assert.throws(()=>validateDirectory({...emptyDirectory(),identities:[p,{...p,nba:'999992',nbaUrl:'https://www.nba.com/player/999992'}]}));
  assert.throws(()=>validateDirectory({...emptyDirectory(),records:[]}));
 });
+test('Admite perfiles oficiales regionales ESPN con el mismo ID, incluidos perfiles universitarios',()=>{
+ const hosts=['www.espn.co.uk','www.espn.com.au','www.espn.in','www.espn.ph','www.espn.com.sg','www.espn.com.br'];
+ for(const host of hosts)for(const sport of ['nba','mens-college-basketball']){
+  for(const path of [`/${sport}/player/bio/_/id/999991/test`,`/${sport}/player?id=999991`,`/${sport}/player/bio?_slug_=test&id=999991`]){
+   const p={...proof(),espnUrl:`https://${host}${path}`};assert.equal(validateDirectory({...emptyDirectory(),identities:[p]}).identities[0].espn,'999991');
+  }
+ }
+ const p={...proof(),espnUrl:'https://www.espn.com.br/basquete/universitario-masculino/jogador/_/id/999991/test'};
+ assert.doesNotThrow(()=>validateDirectory({...emptyDirectory(),identities:[p]}));
+ for(const espnUrl of ['https://www.espn.in.evil.test/nba/player/_/id/999991/test','https://www.espn.in/nfl/player/_/id/999991/test','https://www.espn.in/nba/player/_/id/9999912/test','https://www.espn.in/nba/player?id=999992','https://www.espn.in@evil.test/nba/player/_/id/999991/test','https://unverified.espn.in/nba/player/_/id/999991/test'])assert.throws(()=>validateDirectory({...emptyDirectory(),identities:[{...proof(),espnUrl}]}));
+});
 test('Las correcciones se combinan sin duplicar y las revisiones antiguas no deshacen las nuevas',()=>{
  const p={...emptyDirectory(),identities:[proof()],statuses:[state()]},base=mergeDirectory(emptyDirectory(),p,sample());assert.deepEqual(mergeDirectory(base,p,sample()),base);const reordered={...p,identities:[Object.fromEntries(Object.entries(p.identities[0]).reverse())]};assert.deepEqual(mergeDirectory(base,reordered,sample()),base);
  const active={...emptyDirectory(),statuses:[state('active',later)]},restored=mergeDirectory(base,active,sample());assert.equal(playerState('nba:player:999991',restored,directoryAliases(sample(),restored),now),'active');assert.deepEqual(mergeDirectory(restored,p,sample()),restored);
