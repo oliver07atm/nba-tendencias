@@ -47,7 +47,7 @@ La columna de pertenencias corresponde a la lista oficial consultada en esa fech
 | Utah Jazz (UTA) | 18 | 12 | 6 |
 | Washington Wizards (WAS) | 18 | 9 | 9 |
 
-En Boston quedan pendientes los cruces de Chris Cenac Jr., Dillon Mitchell, Luka Garza y Baylor Scheierman. En Detroit: Chaz Lanier, Isaac Jones, Ebuka Okorie y Ugonna Onyenso. Por ejemplo, la fecha publicada para Isaac Jones en NBA.com no coincide con la encontrada en ESPN: se conserva sin enlace automático. No se concluye que carezcan de actuaciones históricas; puede faltar la correspondencia de IDs. Los 215 nombres y motivos figuran en el CSV privado de pendientes entregado por separado.
+En Boston quedan pendientes 4 cruces y en Detroit otros 4. No se concluye que carezcan de actuaciones históricas: puede faltar la correspondencia de IDs. Cuando las fechas de nacimiento de las fuentes no coinciden, se conserva la identidad sin enlace automático. Los 215 nombres y motivos figuran en el CSV privado de pendientes entregado por separado.
 
 ## Importación sin programar
 
