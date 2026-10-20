@@ -33,7 +33,35 @@ export function identityAliases(rosters){
 export function playerRecords(records,rosters){const aliases=identityAliases(rosters);return records.map(r=>r.kind==='player'&&aliases.has(entityKey(r))?{...r,entityId:aliases.get(entityKey(r))}:r);}
 export function verifiedRoster(team,rosters,now=new Date()){
  const t=rosters?.teams.find(t=>t.id===team);if(!t)return [];
- return t.players.filter(p=>p.membership.status==='reviewed'&&new Date(now)-new Date(p.membership.checkedAt)>=0&&new Date(now)-new Date(p.membership.checkedAt)<=MAX_ROSTER_AGE);
+ return t.players.filter(p=>membershipState(p,now)==='confirmed');
 }
 export function verifiedTeamMap(rosters,now){const map=new Map();for(const t of rosters?.teams||[])for(const p of verifiedRoster(t.id,rosters,now))map.set(rosterPlayerKey(p),t.id);return map;}
 export function rosterPlayer(rosters,key){const id=identityAliases(rosters).get(key)||key;return rosters?.teams.flatMap(t=>t.players).find(p=>rosterPlayerKey(p)===id);}
+
+// Freshness classifies the evidence; it never removes access to a player.
+export function membershipState(player,now=new Date()){
+ if(player?.membership?.status!=='reviewed')return 'pending';
+ const age=new Date(now)-new Date(player.membership.checkedAt);
+ return Number.isFinite(age)&&age>=0&&age<=MAX_ROSTER_AGE?'confirmed':'outdated';
+}
+export function teamPlayerSections(team,records,rosters,now=new Date()){
+ const aliases=identityAliases(rosters),keyOf=r=>aliases.get(entityKey(r))||entityKey(r);
+ const histories=new Map();
+ // Team association chooses the list only. Analysis remains keyed by player
+ // across ALL records, including previous teams and seasons.
+ for(const row of records)if(row.kind==='player'&&row.team===team){const key=keyOf(row);if(!histories.has(key))histories.set(key,{key,name:row.entity});}
+ const allStats=new Set(records.filter(r=>r.kind==='player').map(keyOf));
+ const currentTeams=verifiedTeamMap(rosters,now),confirmed=[],others=new Map(histories);
+ const entries=rosters?.teams.find(t=>t.id===team)?.players||[];
+ for(const player of entries){
+  const key=rosterPlayerKey(player),state=membershipState(player,now);
+  const out={key,name:player.name,state,checkedAt:date(player.membership.checkedAt)?player.membership.checkedAt:null,source:source(player.membership.sourceUrl,'nba.com',new RegExp('^/player/'+player.ids.nba+'(?:/|$)'))?player.membership.sourceUrl:null,hasStats:allStats.has(key)};
+  if(state==='confirmed'){confirmed.push(out);others.delete(key);}else others.set(key,out);
+ }
+ const otherPlayers=[...others.values()].map(p=>({...p,state:p.state||'pending',hasStats:allStats.has(p.key),confirmedTeam:currentTeams.get(p.key)||null}));
+ const sort=(a,b)=>a.name.localeCompare(b.name,'es')||a.key.localeCompare(b.key);
+ return {confirmed:confirmed.sort(sort),others:otherPlayers.sort(sort)};
+}
+export function rosterCoverage(rosters,now=new Date()){
+ return NBA_TEAMS.map(team=>{const t=rosters?.teams.find(t=>t.id===team.id),entries=t?.players||[],confirmed=entries.filter(p=>membershipState(p,now)==='confirmed').length;return {...team,confirmed,awaitingReview:entries.length-confirmed,complete:t?.complete===true&&confirmed===entries.length&&confirmed>0};});
+}

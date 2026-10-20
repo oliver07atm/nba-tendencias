@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {indexedDB} from 'fake-indexeddb';
-import {rosterTemplate,validateRosters,verifiedRoster,identityAliases,playerRecords,verifiedTeamMap} from '../src/data/rosters.js';
+import {rosterTemplate,validateRosters,verifiedRoster,identityAliases,playerRecords,verifiedTeamMap,teamPlayerSections,rosterCoverage} from '../src/data/rosters.js';
 import {loadRosters,saveRosters} from '../src/data/roster-store.js';
 import {loadHistory,saveHistory,deleteHistory} from '../src/data/history-store.js';
 import {fixture} from './fixtures/hoopr.js';
@@ -42,4 +42,30 @@ test('Guardar o rechazar plantillas no modifica ni una fila del historial person
 test('La base pública contiene identidad y pertenencias documentadas, sin estadísticas personales',()=>{
  const r=JSON.parse(readFileSync(new URL('../public/data/rosters.json',import.meta.url)));validateRosters(r);assert.equal(Object.hasOwn(r,'records'),false);for(const p of r.teams.flatMap(t=>t.players))for(const key of ['records','points','rebounds','assists','threeMade'])assert.equal(Object.hasOwn(p,key),false);
  const wf=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');assert.ok(wf.includes('secrets.BALLDONTLIE_API_KEY'));assert.equal(/players\/active/.test(wf),false);
+});
+test('Detalle muestra históricos inmediatamente sin exigir pertenencia actual ni unir homónimos',()=>{
+ const r=sample(),p=convertHoopr(fixture()).dataset.records.find(r=>r.kind==='player');
+ const rows=[p,{...p,id:'other',entity:'Otro histórico',entityId:'espn:player:777777'},{...p,id:'same-name',entityId:'espn:player:888888'}];
+ const before=JSON.stringify(rows),out=teamPlayerSections('BOS',rows,r,now);
+ assert.equal(out.confirmed.length,1);assert.deepEqual(new Set(out.others.map(p=>p.key)),new Set(['espn:player:777777','espn:player:888888']));assert.ok(out.others.every(p=>p.hasStats&&p.state==='pending'));assert.equal(JSON.stringify(rows),before);
+});
+test('Una revisión antigua permanece accesible con advertencia incluso sin historial',()=>{
+ const r=sample(),later=new Date('2026-10-28T11:00Z');let out=teamPlayerSections('BOS',[],r,later);
+ assert.equal(out.confirmed.length,0);assert.equal(out.others.length,1);assert.equal(out.others[0].state,'outdated');assert.equal(out.others[0].hasStats,false);assert.equal(out.others[0].checkedAt,at);
+ const p=convertHoopr(fixture()).dataset.records.find(r=>r.kind==='player');out=teamPlayerSections('BOS',[p],r,later);assert.equal(out.others.length,1);assert.equal(out.others[0].hasStats,true);
+});
+test('Traspaso confirmado mantiene acceso desde ambos equipos y las 200 actuaciones anteriores',()=>{
+ const r=sample(),bos=r.teams.find(t=>t.id==='BOS'),lal=r.teams.find(t=>t.id==='LAL');lal.players=bos.players;lal.checkedAt=at;bos.players=[];validateRosters(r);
+ const p=convertHoopr(fixture()).dataset.records.find(r=>r.kind==='player'),records=Array.from({length:240},(_,i)=>({...p,id:'trade:'+i,team:i<80?'LAL':'BOS',date:new Date(Date.UTC(2026,0,1-i)).toISOString()}));
+ const old=teamPlayerSections('BOS',records,r,now),current=teamPlayerSections('LAL',records,r,now);
+ assert.equal(old.confirmed.length,0);assert.equal(old.others[0].confirmedTeam,'LAL');assert.equal(current.confirmed.length,1);assert.equal(current.others.length,0);assert.equal(filterRows(playerRecords(records,r),{entity:current.confirmed[0].key,limit:200}).length,200);
+});
+test('Pendientes de la base e históricos no duplican jugadores por ID y la cobertura no inventa totales',()=>{
+ const r=sample(),p=convertHoopr(fixture()).dataset.records.find(r=>r.kind==='player');r.teams.find(t=>t.id==='BOS').players[0].membership.status='pending';
+ const out=teamPlayerSections('BOS',[p,p],r,now);assert.equal(out.others.length,1);assert.equal(out.others[0].hasStats,true);assert.equal(out.others[0].state,'pending');
+ const coverage=rosterCoverage(r,now);assert.equal(coverage.length,30);assert.equal(coverage.find(t=>t.id==='BOS').confirmed,0);assert.equal(coverage.find(t=>t.id==='BOS').awaitingReview,1);assert.ok(coverage.every(t=>!t.complete));
+});
+test('Las entradas pendientes se pueden mostrar sin ejecutar enlaces ni fechas no validados',()=>{
+ const r=sample(),p=r.teams.find(t=>t.id==='BOS').players[0];p.membership={status:'pending',sourceUrl:'javascript:alert(1)',checkedAt:'fecha desconocida'};
+ const out=teamPlayerSections('BOS',[],r,now);assert.equal(out.others.length,1);assert.equal(out.others[0].source,null);assert.equal(out.others[0].checkedAt,null);
 });

@@ -2,7 +2,7 @@
 
 ## Qué se ha verificado y qué no
 
-No se han conseguido verificar las plantillas completas de los 30 equipos de 2026-27. La web no afirma que estén completas ni convierte las asociaciones del historial en pertenencias actuales.
+No se han conseguido verificar las plantillas completas de los 30 equipos de 2026-27. La web no afirma que estén completas ni convierte las asociaciones del historial en pertenencias actuales. **Actualización: ambos listados por equipo están siempre visibles, sin desplegables ni filtros de antigüedad que impidan abrir jugadores.** [Cobertura e investigación actuales](estado-plantillas.md).
 
 La [documentación oficial de BALLDONTLIE](https://docs.balldontlie.io/#account-tiers) ofrece Players y Games gratis. Sin embargo, el listado general `/v1/players`, incluso filtrado por `team_ids[]`, no certifica por sí solo una plantilla activa de una temporada. El endpoint específico [Active Players](https://docs.balldontlie.io/#get-all-active-players), `/v1/players/active`, requiere un plan de pago. No se ha llamado a ese endpoint, iniciado un trial ni añadido consultas autenticadas al navegador. La actualización del calendario conserva su funcionamiento y su secreto exclusivamente en Actions.
 
@@ -15,16 +15,16 @@ La base independiente inicial incluye las 30 franquicias, con **solo dos pertene
 
 La pertenencia se comprobó en las páginas oficiales del equipo y jugador. Las páginas de ESPN no se utilizaron como prueba de la plantilla actual: se contrastaron los identificadores y los datos biográficos de los perfiles indexados. No se han copiado estadísticas, noticias, lesiones ni bases históricas. Esta revisión parcial no verifica ni disponibilidad ni alineaciones.
 
-Cada pertenencia tiene fuente y fecha. Se deja de presentar como actual después de siete días sin revisión (o si la fecha es futura). La identidad estable no caduca con esa pertenencia: se conserva para poder analizar toda la carrera disponible, también después de un traspaso. No hay una renovación automática ficticia de esas fechas al desplegar la web.
+Cada pertenencia tiene fuente y fecha. Después de siete días sin revisión (o si la fecha es futura), se presenta en «Otros jugadores con estadísticas históricas» con «Actualización pendiente», y sigue siendo visible y pulsable. La antigüedad solo clasifica la evidencia; no oculta jugadores. La identidad estable no caduca con esa pertenencia: se conserva para poder analizar toda la carrera disponible, también después de un traspaso. No hay una renovación automática ficticia de esas fechas al desplegar la web.
 
 ## Uso del detalle de partido
 
 1. Entra en **Partidos** y pulsa **Consultar historial**.
-2. El detalle muestra por defecto solo jugadores con pertenencia revisada y vigente. Verás un aviso de revisión parcial y las fuentes por equipo y jugador. Si no hay ninguno, se explica en lugar de rellenar nombres.
-3. **Jugadores históricos** abre las asociaciones presentes en tus temporadas importadas. No afirma que todos esos jugadores hayan abandonado el equipo: algunos podrían seguir allí sin estar contrastados en la base actual.
+2. El detalle muestra dos secciones abiertas por equipo: **Plantilla actual** y **Otros jugadores con estadísticas históricas**. Verás un aviso de revisión parcial y las fuentes por equipo y jugador. Si no hay ninguno, se explica en lugar de rellenar nombres.
+3. **Otros jugadores con estadísticas históricas** muestra directamente las asociaciones presentes en tus temporadas importadas, sin pulsar un desplegable. No afirma que todos esos jugadores hayan abandonado el equipo: algunos podrían seguir allí sin estar contrastados en la base actual.
 4. Pulsa un jugador para consultar su historial completo por ID estable, con todos sus equipos anteriores. No se añade automáticamente un filtro de equipo actual.
 5. Si no existe un cruce de identidad revisado o no hay actuaciones importadas, aparece **Sin estadísticas disponibles**; no se sustituye al jugador por otro ni se empareja solo por nombre.
-6. **← Volver al partido** regresa al mismo encuentro; se conserva el apartado histórico abierto y su desplazamiento. **← Volver a Partidos** regresa al calendario.
+6. **← Volver al partido** regresa al mismo encuentro; se conserva el encuentro y su desplazamiento. La navegación existente no se ha modificado en esta corrección. **← Volver a Partidos** regresa al calendario.
 
 Las tendencias de próximos partidos utilizan las pertenencias revisadas para jugadores, por lo que son parciales; las tendencias de equipos siguen usando sus históricos. El equipo actual se utiliza para seleccionar el próximo encuentro, nunca para reemplazar el equipo de las actuaciones pasadas. La demostración continúa disponible con sus propias etiquetas y asociaciones sintéticas.
 
