@@ -31,7 +31,8 @@ export async function fetchCalendar({apiKey,now=new Date(),fetchImpl=fetch,wait=
   const next=body.meta.next_cursor;
   if(next==null){
    const updatedAt=new Date(now).toISOString();
-   return validateSchedule({meta:{source:'BALLDONTLIE',endpoint:'/v1/games',updatedAt,lastAttemptAt:updatedAt,lastError:null,coverage:{from:addDays(today,-7),to:end},requests,gameCount:games.size},games:[...games.values()].filter(g=>g.day>=addDays(today,-7)&&g.day<=end)});
+   const published=[...games.values()].filter(g=>g.day>=addDays(today,-7)&&g.day<=end);
+   return validateSchedule({meta:{source:'BALLDONTLIE',endpoint:'/v1/games',updatedAt,lastAttemptAt:updatedAt,lastError:null,coverage:{from:addDays(today,-7),to:end},requests,fetchedGameCount:games.size,gameCount:published.length},games:published});
   }
   if(!Number.isSafeInteger(next)||next<0||seen.has(next)||body.data.length===0)throw new CalendarError('INVALID_PAGINATION');
   seen.add(next);cursor=next;

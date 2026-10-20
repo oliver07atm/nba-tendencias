@@ -38,3 +38,16 @@ Si falla autenticación, red, paginación o validación, se conserva íntegra la
 ## Verificación
 
 `npm test` comprueba normalización de las 30 franquicias, paginación, pausas y reintentos, deduplicación, estados, horarios, ausencia de horas inventadas, fallo sin pérdida del último calendario, separación del historial y conservación de la desactivación de estadísticas. Las fixtures son sintéticas. `npm run build` compila la web. La comprobación autenticada se realiza exclusivamente en Actions con el secreto; su resultado se acredita mediante el paso de descarga y el JSON público resultante, sin extraer el secreto.
+
+### Comprobación autenticada del 20 de octubre de 2026
+
+La [ejecución inicial de Actions](https://github.com/oliver07atm/nba-tendencias/actions/runs/39455235565) completó descarga, pruebas, compilación, conservación y publicación. El secreto fue aceptado por `/v1/games`: tres peticiones paginadas devolvieron 226 partidos; 222 quedaron dentro del intervalo público de fechas de Canarias. La copia contiene las 30 franquicias, sin horas ausentes. Había 107 encuentros entre hoy y los próximos 14 días. Los recuentos cambian con cada actualización.
+
+Se contrastaron dos encuentros del JSON con las páginas originales de NBA.com:
+
+| Encuentro | Fuente NBA (hora del Este) | UTC en BALLDONTLIE | Canarias |
+| --- | --- | --- | --- |
+| [Boston visitante en Detroit](https://www.nba.com/game/BOS-vs-DET-0022600001) | 20/10/2026, 15:00 ET | 20/10, 19:00 UTC | 20/10, 20:00 |
+| [Philadelphia visitante en New York](https://www.nba.com/game/PHI-vs-NYK-0022600002) | 20/10/2026, 19:00 ET | 20/10, 23:00 UTC | 21/10, 00:00 |
+
+La prueba en navegador utilizó este calendario real y un historial sintético de tres temporadas en un perfil aislado: abrió estadísticas desde Boston, mostró 200 actuaciones, cuartos del equipo y tendencias. Verificó mediante una huella SHA-256 que consultar partidos, fechas, gráficos y recargar no modificaba la copia guardada en IndexedDB. También comprobó fallo con conservación del calendario, ausencia de subidas y presentación móvil. No se accedió a la base personal del usuario ni se certificaron plantillas vigentes.
