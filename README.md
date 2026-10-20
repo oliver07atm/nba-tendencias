@@ -125,8 +125,10 @@ Con el guardado activado, IndexedDB lo recupera al volver a abrir la web. **Expo
 
 Consulta la [guía de uso sin programar](docs/importacion-personal.md). Las actualizaciones de estadísticas individuales siguen desactivadas; esta función solo procesa archivos seleccionados por el usuario. La actualización del calendario real es independiente y no toca IndexedDB.
 
-## Plantillas parciales y navegación real
+## Plantillas personales y navegación
 
-React Router con HashRouter permite enlaces directos a partidos, jugadores, equipos y análisis con filtros; Atrás/Adelante y «Volver al partido» conservan el contexto. La base independiente de plantillas 2026-27 contiene por ahora **solo dos pertenencias contrastadas**, no las 30 plantillas completas. Datos incluye actualización manual con fuentes e IDs; las asociaciones históricas y las pertenencias pendientes se muestran siempre abiertas junto a la plantilla confirmada. Las revisiones antiguas se avisan sin ocultar jugadores. [Alcance real, fuentes, límites y guía de uso](docs/plantillas-y-navegacion.md). El historial y la actualización gratuita del calendario se conservan.
+Las 30 listas oficiales 2026-27 se contrastaron el 20 de octubre de 2026: 519 jugadores, incluidos 17 de Boston y 18 de Detroit. El archivo preparado para importación personal se entrega por separado; no se redistribuye en GitHub ni en Pages. Hay 304 cruces de identidad NBA/ESPN contrastados y 215 pendientes. El build público solo incluye el esquema vacío.
 
-La [cobertura de plantillas por equipo](docs/estado-plantillas.md) sigue siendo parcial: Boston 1, Detroit 1 y 0 pertenencias contrastadas en los otros 28 equipos; no se ha completado una descarga automática autorizada. Todos los jugadores disponibles en el historial se pueden abrir desde cada partido, también cuando no se ha confirmado su pertenencia actual.
+En **Datos → Plantillas actuales → Importar plantillas JSON**, selecciona el archivo privado, revisa la vista previa y guárdalo en el navegador. Se utiliza una base IndexedDB independiente; los históricos personales no se reemplazan. Los jugadores actuales sin estadísticas enlazadas permanecen visibles. Se distingue a los históricos con otro equipo confirmado de los pendientes de verificar. Las revisiones antiguas se avisan sin ocultar jugadores.
+
+React Router con HashRouter conserva los enlaces a partidos y análisis, los filtros y Atrás/Adelante. No se modifica la navegación en esta actualización. [Recuento de los 30 equipos, fuentes, importación y limitaciones](docs/estado-plantillas.md). El calendario gratuito y la demostración se mantienen.

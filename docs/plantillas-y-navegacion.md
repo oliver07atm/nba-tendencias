@@ -2,25 +2,18 @@
 
 ## Qué se ha verificado y qué no
 
-No se han conseguido verificar las plantillas completas de los 30 equipos de 2026-27. La web no afirma que estén completas ni convierte las asociaciones del historial en pertenencias actuales. **Actualización: ambos listados por equipo están siempre visibles, sin desplegables ni filtros de antigüedad que impidan abrir jugadores.** [Cobertura e investigación actuales](estado-plantillas.md).
+Se contrastaron las 30 listas oficiales de inicio de 2026-27 para importación personal: 519 jugadores. El archivo privado se entrega fuera del repositorio; la web pública no redistribuye esas listas ni convierte las asociaciones del historial en pertenencias actuales. **Actualización: ambos listados por equipo están siempre visibles, sin desplegables ni filtros de antigüedad que impidan abrir jugadores.** [Cobertura e investigación actuales](estado-plantillas.md).
 
 La [documentación oficial de BALLDONTLIE](https://docs.balldontlie.io/#account-tiers) ofrece Players y Games gratis. Sin embargo, el listado general `/v1/players`, incluso filtrado por `team_ids[]`, no certifica por sí solo una plantilla activa de una temporada. El endpoint específico [Active Players](https://docs.balldontlie.io/#get-all-active-players), `/v1/players/active`, requiere un plan de pago. No se ha llamado a ese endpoint, iniciado un trial ni añadido consultas autenticadas al navegador. La actualización del calendario conserva su funcionamiento y su secreto exclusivamente en Actions.
 
-La base independiente inicial incluye las 30 franquicias, con **solo dos pertenencias revisadas manualmente**, todas las coberturas de equipo marcadas como parciales:
-
-| Jugador | Equipo contrastado en NBA.com | ID NBA | ID ESPN | Identidad contrastada |
-| --- | --- | --- | --- | --- |
-| Jayson Tatum | [Boston](https://www.nba.com/team/1610612738/celtics) | 1628369 | 4065648 | [Perfil NBA](https://www.nba.com/player/1628369/jayson-tatum), [perfil ESPN](https://www.espn.com/nba/player/_/id/4065648/jayson-tatum); misma fecha de nacimiento: 1998-03-03 |
-| Cade Cunningham | [Detroit](https://www.nba.com/team/1610612765/pistons) | 1630595 | 4432166 | [Perfil NBA](https://www.nba.com/player/1630595/cade-cunningham), [perfil ESPN](https://www.espn.com/nba/player/_/id/4432166/cade-cunningham); misma fecha de nacimiento: 2001-09-25 |
-
-La pertenencia se comprobó en las páginas oficiales del equipo y jugador. Las páginas de ESPN no se utilizaron como prueba de la plantilla actual: se contrastaron los identificadores y los datos biográficos de los perfiles indexados. No se han copiado estadísticas, noticias, lesiones ni bases históricas. Esta revisión parcial no verifica ni disponibilidad ni alineaciones.
+La comprobación del 20 de octubre de 2026 abarca 519 pertenencias en 30 listas oficiales, con 304 cruces NBA/ESPN contrastados y 215 pendientes. El archivo personal se entrega por separado; no se publica en GitHub. El esquema público está vacío. Consulta la [cobertura y guía de importación](estado-plantillas.md). La evidencia puede ser el perfil oficial o la página del equipo correcto acompañada de temporada, fecha e ID del perfil NBA. No se copian estadísticas ni noticias.
 
 Cada pertenencia tiene fuente y fecha. Después de siete días sin revisión (o si la fecha es futura), se presenta en «Otros jugadores con estadísticas históricas» con «Actualización pendiente», y sigue siendo visible y pulsable. La antigüedad solo clasifica la evidencia; no oculta jugadores. La identidad estable no caduca con esa pertenencia: se conserva para poder analizar toda la carrera disponible, también después de un traspaso. No hay una renovación automática ficticia de esas fechas al desplegar la web.
 
 ## Uso del detalle de partido
 
 1. Entra en **Partidos** y pulsa **Consultar historial**.
-2. El detalle muestra dos secciones abiertas por equipo: **Plantilla actual** y **Otros jugadores con estadísticas históricas**. Verás un aviso de revisión parcial y las fuentes por equipo y jugador. Si no hay ninguno, se explica en lugar de rellenar nombres.
+2. El detalle muestra dos secciones abiertas por equipo: **Plantilla actual** y **Otros jugadores con estadísticas históricas**. Verás la cobertura y las fuentes por equipo y jugador, correspondientes a la fecha declarada. Si no hay ninguno, se explica en lugar de rellenar nombres.
 3. **Otros jugadores con estadísticas históricas** muestra directamente las asociaciones presentes en tus temporadas importadas, sin pulsar un desplegable. No afirma que todos esos jugadores hayan abandonado el equipo: algunos podrían seguir allí sin estar contrastados en la base actual.
 4. Pulsa un jugador para consultar su historial completo por ID estable, con todos sus equipos anteriores. No se añade automáticamente un filtro de equipo actual.
 5. Si no existe un cruce de identidad revisado o no hay actuaciones importadas, aparece **Sin estadísticas disponibles**; no se sustituye al jugador por otro ni se empareja solo por nombre.

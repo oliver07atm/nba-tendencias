@@ -68,4 +68,32 @@ test('Pendientes de la base e históricos no duplican jugadores por ID y la cobe
 test('Las entradas pendientes se pueden mostrar sin ejecutar enlaces ni fechas no validados',()=>{
  const r=sample(),p=r.teams.find(t=>t.id==='BOS').players[0];p.membership={status:'pending',sourceUrl:'javascript:alert(1)',checkedAt:'fecha desconocida'};
  const out=teamPlayerSections('BOS',[],r,now);assert.equal(out.others.length,1);assert.equal(out.others[0].source,null);assert.equal(out.others[0].checkedAt,null);
+ p.membership={status:'pending',sourceUrl:'https://www.nba.com/team/1610612738/celtics/roster',checkedAt:{bad:true},asOf:{bad:true},season:'2026-27'};
+ const malformed=teamPlayerSections('BOS',[],r,now);assert.equal(malformed.others[0].asOf,null);assert.equal(malformed.others[0].source,null);
+});
+function rosterEvidence(){const r=sample(),t=r.teams.find(t=>t.id==='BOS'),p=t.players[0];t.complete=true;t.expectedCount=1;p.membership={status:'reviewed',checkedAt:at,season:'2026-27',asOf:'2026-10-20',sourceUrl:'https://www.nba.com/team/1610612738/celtics/roster',playerUrl:'https://www.nba.com/player/999991'};return r;}
+test('Acepta evidencia de la plantilla del equipo correcto con temporada, fecha e identidad estable',()=>{
+ const r=rosterEvidence();validateRosters(r);const out=teamPlayerSections('BOS',[],r,now);
+ assert.equal(out.confirmed.length,1);assert.equal(out.confirmed[0].hasStats,false);assert.equal(out.confirmed[0].source,r.teams.find(t=>t.id==='BOS').players[0].membership.sourceUrl);assert.equal(out.confirmed[0].asOf,'2026-10-20');
+ const t=rosterCoverage(r,now).find(t=>t.id==='BOS');assert.equal(t.registered,1);assert.equal(t.confirmed,1);assert.equal(t.linked,1);assert.equal(t.complete,true);
+});
+test('La evidencia de otro equipo, temporada, fecha imposible o ID distinto no verifica pertenencias',()=>{
+ for(const edit of [m=>m.sourceUrl='https://www.nba.com/team/1610612765/pistons/roster',m=>m.sourceUrl='https://nba.com.evil.test/team/1610612738',m=>m.sourceUrl='https://www.nba.com/news/another-article',m=>m.season='2025-26',m=>delete m.season,m=>m.playerUrl='https://www.nba.com/player/999992',m=>m.asOf='2026-02-31',m=>m.asOf='2026-10-21']){const r=rosterEvidence();edit(r.teams.find(t=>t.id==='BOS').players[0].membership);assert.throws(()=>validateRosters(r),/evidencia oficial/);}
+ const r=rosterEvidence();r.teams.find(t=>t.id==='BOS').expectedCount=18;assert.throws(()=>validateRosters(r),/número de jugadores/);
+});
+test('La identidad admite perfiles ESPN regionales y biografías con parámetros, exigiendo el mismo ID',()=>{
+ for(const url of ['https://africa.espn.com/nba/player/news/_/id/999991/player','https://www.espn.com/nba/player/bio?id=999991','https://www.espn.com/nba/player?id=999991']){const r=rosterEvidence();r.teams.find(t=>t.id==='BOS').players[0].identity.espnUrl=url;validateRosters(r);}
+ for(const url of ['https://africa.espn.com.evil.test/nba/player/_/id/999991','https://www.espn.com/nba/player/bio?id=999992','https://user:password@africa.espn.com/nba/player/_/id/999991','http://africa.espn.com/nba/player/_/id/999991']){const r=rosterEvidence();r.teams.find(t=>t.id==='BOS').players[0].identity.espnUrl=url;assert.throws(()=>validateRosters(r),/evidencias de identidad/);}
+});
+test('Completar 30 plantillas locales no altera el historial y una importación inválida conserva la base',async()=>{
+ const r=rosterTemplate();let id=990000;
+ for(const t of r.teams){t.complete=true;t.checkedAt=at;t.expectedCount=17;t.players=Array.from({length:17},()=>{const key=String(id++);return {name:'Jugador sintético '+key,ids:{nba:key},membership:{status:'reviewed',checkedAt:at,season:'2026-27',asOf:'2026-10-20',sourceUrl:t.sourceUrl,playerUrl:'https://www.nba.com/player/'+key}};});}
+ validateRosters(r);const d=convertHoopr(fixture()).dataset;await saveHistory(d);const before=JSON.stringify(await loadHistory());await saveRosters(r);
+ assert.equal(rosterCoverage(await loadRosters(),now).filter(t=>t.complete).length,30);assert.equal(rosterCoverage(r,now).reduce((n,t)=>n+t.registered,0),510);
+ for(const t of r.teams){const section=teamPlayerSections(t.id,[],r,now);assert.equal(section.confirmed.length,17);assert.ok(section.confirmed.every(p=>!p.hasStats));}
+ const invalid=structuredClone(r);invalid.teams[0].players.pop();await assert.rejects(saveRosters(invalid));assert.deepEqual(await loadRosters(),r);assert.equal(JSON.stringify(await loadHistory()),before);await deleteHistory();
+});
+test('La distribución pública solo incluye una plantilla vacía; el archivo privado nunca forma parte del build',()=>{
+ const r=JSON.parse(readFileSync(new URL('../public/data/rosters.json',import.meta.url)));assert.ok(r.teams.every(t=>t.players.length===0&&!t.complete));
+ const ignored=readFileSync(new URL('../.gitignore',import.meta.url),'utf8');assert.ok(ignored.split('\n').includes('work/'));
 });

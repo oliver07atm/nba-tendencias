@@ -12,29 +12,9 @@
     {
       "id": "BOS",
       "complete": false,
-      "checkedAt": "2026-10-20T16:45:19.307Z",
+      "checkedAt": null,
       "sourceUrl": "https://www.nba.com/team/1610612738",
-      "players": [
-        {
-          "name": "Jayson Tatum",
-          "ids": {
-            "nba": "1628369",
-            "espn": "4065648"
-          },
-          "membership": {
-            "status": "reviewed",
-            "checkedAt": "2026-10-20T16:45:19.307Z",
-            "sourceUrl": "https://www.nba.com/player/1628369/jayson-tatum"
-          },
-          "identity": {
-            "status": "reviewed",
-            "checkedAt": "2026-10-20T16:45:19.307Z",
-            "birthDate": "1998-03-03",
-            "nbaUrl": "https://www.nba.com/player/1628369/jayson-tatum",
-            "espnUrl": "https://www.espn.com/nba/player/_/id/4065648/jayson-tatum"
-          }
-        }
-      ]
+      "players": []
     },
     {
       "id": "BKN",
@@ -81,29 +61,9 @@
     {
       "id": "DET",
       "complete": false,
-      "checkedAt": "2026-10-20T16:45:19.307Z",
+      "checkedAt": null,
       "sourceUrl": "https://www.nba.com/team/1610612765",
-      "players": [
-        {
-          "name": "Cade Cunningham",
-          "ids": {
-            "nba": "1630595",
-            "espn": "4432166"
-          },
-          "membership": {
-            "status": "reviewed",
-            "checkedAt": "2026-10-20T16:45:19.307Z",
-            "sourceUrl": "https://www.nba.com/player/1630595/cade-cunningham"
-          },
-          "identity": {
-            "status": "reviewed",
-            "checkedAt": "2026-10-20T16:45:19.307Z",
-            "birthDate": "2001-09-25",
-            "nbaUrl": "https://www.nba.com/player/1630595/cade-cunningham",
-            "espnUrl": "https://www.espn.com/nba/player/_/id/4432166/cade-cunningham"
-          }
-        }
-      ]
+      "players": []
     },
     {
       "id": "GSW",
