@@ -9,9 +9,9 @@ function url(value,hosts,path){try{const u=new URL(value);return u.protocol==='h
 const nbaUrl=(value,key)=>url(value,['nba.com','www.nba.com'],u=>new RegExp('^/player/'+key+'(?:/|$)').test(u.pathname));
 // ESPN uses the same athlete ID in its NBA and college profiles. Keep an explicit
 // host/path allowlist: a regional URL is evidence, never an automatic name match.
-const espnProfileHosts=['espn.com','www.espn.com','africa.espn.com','www.espn.co.uk','www.espn.com.au','www.espn.in','www.espn.ph','www.espn.com.sg','www.espn.com.br'];
+const espnProfileHosts=['espn.com','www.espn.com','africa.espn.com','www.espn.co.uk','www.espn.com.au','www.espn.in','www.espn.ph','www.espn.com.sg','www.espn.com.br','www.espn.com.mx','www.espn.com.pe'];
 const espnUrl=(value,key)=>url(value,espnProfileHosts,u=>{
- const root='/(?:nba|mens-college-basketball)/(?:player|jogador)|/basquete/universitario-masculino/jogador';
+ const root='/(?:nba|mens-college-basketball)/(?:player|jogador)|/basquete/universitario-masculino/jogador|/basquetbol/(?:nba|colegial-hombres)/jugador';
  return new RegExp('^(?:'+root+')/(?:[a-z]+/)?_/id/'+key+'(?:/|$)').test(u.pathname)||new RegExp('^(?:'+root+')(?:/(?:bio|stats|gamelog|news|splits))?/?$').test(u.pathname)&&u.searchParams.get('id')===key;
 });
 export const statusEvidence=value=>url(value,['nba.com','www.nba.com','espn.com','www.espn.com','africa.espn.com'],u=>u.hostname.endsWith('nba.com')?/^\/(?:news\/|[a-z]+\/news\/|player\/)/.test(u.pathname):/^\/nba\/(?:story\/|player\/)/.test(u.pathname));

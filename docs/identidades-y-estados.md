@@ -51,4 +51,6 @@ Las evidencias de identidad admiten los perfiles oficiales de ESPN en sus edicio
 
 Una discrepancia de nacimiento o un perfil inaccesible deja la identidad pendiente; no equivale a ausencia de estadísticas. Para añadir exclusivamente enlaces de identidad, el archivo debe llevar `statuses: []`: se combinarán las identidades y se conservarán todos los estados de actividad o retirada existentes.
 
+También se admiten los perfiles oficiales de ESPN México y Perú, incluidas las rutas en español de NBA y baloncesto universitario. En esas páginas, «FDN» identifica la fecha de nacimiento y su formato es día/mes/año. La revisión de fuentes debe interpretar esa etiqueta y su idioma; la aplicación no descarga ni analiza páginas de ESPN. Mantiene la URL real como evidencia y no modifica nacimientos para forzar una coincidencia. Que un jugador figure como novato en NBA.com y no aparezca en los CSV anteriores no verifica por sí solo su ID ESPN.
+
 La revisión preparada y sus fuentes se entregan como archivo privado separado del código. No se publican esos archivos en GitHub ni se activa una API de pago o una extracción automática nueva. El calendario de BALLDONTLIE y las actualizaciones de estadísticas individuales desactivadas mantienen su configuración anterior.

@@ -24,7 +24,7 @@ test('Rechaza cruces ambiguos, fuentes engañosas y fechas de nacimiento imposib
  assert.throws(()=>validateDirectory({...emptyDirectory(),records:[]}));
 });
 test('Admite perfiles oficiales regionales ESPN con el mismo ID, incluidos perfiles universitarios',()=>{
- const hosts=['www.espn.co.uk','www.espn.com.au','www.espn.in','www.espn.ph','www.espn.com.sg','www.espn.com.br'];
+ const hosts=['www.espn.co.uk','www.espn.com.au','www.espn.in','www.espn.ph','www.espn.com.sg','www.espn.com.br','www.espn.com.mx','www.espn.com.pe'];
  for(const host of hosts)for(const sport of ['nba','mens-college-basketball']){
   for(const path of [`/${sport}/player/bio/_/id/999991/test`,`/${sport}/player?id=999991`,`/${sport}/player/bio?_slug_=test&id=999991`]){
    const p={...proof(),espnUrl:`https://${host}${path}`};assert.equal(validateDirectory({...emptyDirectory(),identities:[p]}).identities[0].espn,'999991');
@@ -32,6 +32,8 @@ test('Admite perfiles oficiales regionales ESPN con el mismo ID, incluidos perfi
  }
  const p={...proof(),espnUrl:'https://www.espn.com.br/basquete/universitario-masculino/jogador/_/id/999991/test'};
  assert.doesNotThrow(()=>validateDirectory({...emptyDirectory(),identities:[p]}));
+ for(const sport of ['nba','colegial-hombres'])for(const path of [`/basquetbol/${sport}/jugador/_/id/999991/test`,`/basquetbol/${sport}/jugador/bio/_/id/999991/test`])assert.doesNotThrow(()=>validateDirectory({...emptyDirectory(),identities:[{...proof(),espnUrl:'https://www.espn.com.mx'+path}]}));
+ for(const espnUrl of ['https://www.espn.com.mx.evil.test/basquetbol/nba/jugador/_/id/999991','https://www.espn.com.mx/basquetbol/nba/jugador/_/id/999992/test','https://www.espn.com.mx/futbol/jugador/_/id/999991/test','https://www.espn.com.mx/basquetbol/falso/jugador/_/id/999991/test'])assert.throws(()=>validateDirectory({...emptyDirectory(),identities:[{...proof(),espnUrl}]}));
  for(const espnUrl of ['https://www.espn.in.evil.test/nba/player/_/id/999991/test','https://www.espn.in/nfl/player/_/id/999991/test','https://www.espn.in/nba/player/_/id/9999912/test','https://www.espn.in/nba/player?id=999992','https://www.espn.in@evil.test/nba/player/_/id/999991/test','https://unverified.espn.in/nba/player/_/id/999991/test'])assert.throws(()=>validateDirectory({...emptyDirectory(),identities:[{...proof(),espnUrl}]}));
 });
 test('Las correcciones se combinan sin duplicar y las revisiones antiguas no deshacen las nuevas',()=>{
