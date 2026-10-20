@@ -103,3 +103,12 @@ Se ha inspeccionado la cobertura de 2024-25 y 2025-26. **No se publican esos dat
 - [Conversor local de CSV y combinación de temporadas](docs/importar-hoopr.md): `npm run import:hoopr`. No descarga datos ni publica su salida; solo permite escribir en `work/`.
 - Los gráficos y filtros conservan su funcionamiento. Se admiten IDs estables, historial de traspasos, homónimos, dos o más temporadas y muestras de 100/150/200 actuaciones disponibles.
 - `npm test` incluye las pruebas originales y casos nuevos del importador y los controles de publicación. Las fixtures de estas pruebas son inventadas, no resultados reales.
+
+## Alternativas gratuitas y uso relacionado con apuestas
+
+Se han revisado Highlightly NBA API, TheSportsDB y API-NBA. **Ninguna está aprobada para conectar y publicar datos en el uso solicitado.** API-NBA es la candidata técnica para aclarar permisos y probar cobertura; Highlightly tiene una restricción relevante sobre apuestas y TheSportsDB no acredita la cobertura gratuita necesaria.
+
+- [Comparación de cobertura, límites, condiciones y recomendación](docs/alternativas-api-gratuitas.md).
+- [Cómo guardar una posible clave gratuita en GitHub Secrets](docs/claves-api.md).
+
+No se ha añadido una clave, un adaptador autenticado o un workflow de descarga. La demostración y la desactivación de actualizaciones se conservan.
