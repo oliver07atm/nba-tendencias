@@ -45,7 +45,7 @@ El workflow valida también pull requests sin publicarlos. El repositorio públi
 - Líneas numéricas libres, mayores/menores, últimos 5–300, cantidad personalizada o todos los registros disponibles. Filtros por local/visitante, rival, competición y múltiples temporadas.
 - Gráfico Recharts con colores de cumplimiento, fecha/rival/valor en tooltip, tabla por encuentro y exportación JSON del análisis.
 - Tendencias para entidades de los equipos del calendario cargado, ordenables y con muestra ajustable. Se usa una línea exploratoria derivada de la mediana y se calculan ambas direcciones. No hay motor predictivo ni cuotas.
-- Importación JSON/CSV en navegador, sin subir archivos. Los datos no persisten tras recargar; para persistir usa `public/data/current.json` o el adaptador autorizado.
+- Importación personal de tres CSV de SportsDataverse/hoopR desde Datos, procesada en un Web Worker, combinación de temporadas sin duplicados y guardado local en IndexedDB. También admite JSON/CSV normalizado, exportación JSON para otro dispositivo y vuelta a demostración sin borrar el historial. No se suben archivos ni estadísticas.
 
 ## Fórmulas y convenciones
 
@@ -75,7 +75,7 @@ Cada registro requiere `id` único, `kind` (`player` o `team`), `entity` (nombre
 
 Los registros `team` añaden `quarters`, `opponentQuarters` (listas de al menos 4 números, prórrogas opcionales) y `opponentStats` con las mismas estadísticas numéricas del rival. `points` debe coincidir con la suma de `quarters`. En equipos, `entity` debe coincidir con `team`.
 
-CSV usa los mismos nombres de columnas; **solo contiene records**, por lo que no carga calendario. Usa comillas CSV estándar y JSON dentro de celdas `quarters`, `opponentQuarters` y `opponentStats`. Separador coma. Hay un ejemplo válido en `public/data/ejemplo.csv`. Máximo 64 MB o 100.000 registros. Los archivos importados se muestran como importados sin verificar aunque declaren `real`.
+CSV usa los mismos nombres de columnas; **solo contiene records**, por lo que no carga calendario. Usa comillas CSV estándar y JSON dentro de celdas `quarters`, `opponentQuarters` y `opponentStats`. Separador coma. Hay un ejemplo válido en `public/data/ejemplo.csv`. Máximo 256 MB para JSON/CSV normalizado y 300.000 registros. En el formulario de tres archivos, cada CSV admite hasta 64 MB. Los archivos importados se muestran como importados sin verificar aunque declaren `real`.
 
 ## Preparación de actualización automática
 
@@ -112,3 +112,11 @@ Se han revisado Highlightly NBA API, TheSportsDB y API-NBA. **Ninguna está apro
 - [Cómo guardar una posible clave gratuita en GitHub Secrets](docs/claves-api.md).
 
 No se ha añadido una clave, un adaptador autenticado o un workflow de descarga. La demostración y la desactivación de actualizaciones se conservan.
+
+## Historial personal en el navegador
+
+En **Datos → Importar estadísticas NBA desde CSV**, selecciona jugadores, equipos y calendario de la misma temporada y pulsa **Convertir e importar temporada**. Repite el proceso para añadir temporadas. El historial se identifica como de procedencia declarada, pendiente de verificación.
+
+Con el guardado activado, IndexedDB lo recupera al volver a abrir la web. **Exportar historial JSON** permite trasladarlo al iPhone y cargarlo desde **Importar JSON o CSV**. El guardado depende del navegador y no sustituye una copia JSON de seguridad. La demostración permanece disponible y los datos importados no se publican en GitHub.
+
+Consulta la [guía de uso sin programar](docs/importacion-personal.md). La publicación de una fuente remota y las actualizaciones automáticas siguen desactivadas; esta función solo procesa archivos seleccionados por el usuario.

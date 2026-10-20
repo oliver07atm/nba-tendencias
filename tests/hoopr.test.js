@@ -5,10 +5,8 @@ import {convertHoopr,parseLinescores,parseMinutes,readHooprCsv,seasonLabel,merge
 import {assertSourceRights,assertPublishableDataset} from '../src/data/publication.js';
 import {entityKey,entityOptions,filterRows,summarize,detectTrends} from '../src/engine.js';
 // Entirely invented schema fixtures. These do not encode an actual NBA result.
-function fixture(year=2025,id='100000001'){
- const base={game_id:id,season:String(year),season_type:'2',assists:'5',blocks:'1',field_goals_made:'8',field_goals_attempted:'16',three_point_field_goals_made:'2',three_point_field_goals_attempted:'5',steals:'1',turnovers:'2',total_turnovers:'3',total_rebounds:'30',rebounds:'6',minutes:'30.0'};
- return {players:[{...base,team_id:'2',athlete_id:'999991',athlete_display_name:'Jugador de prueba',did_not_play:'false',points:'20'}],teams:[{...base,team_id:'2',team_score:'100',team_display_name:'Equipo ficticio A'},{...base,team_id:'13',team_score:'96',team_display_name:'Equipo ficticio B'}],schedule:[{game_id:id,season:String(year),season_type:'2',date:`${year-1}-11-01T23:30:00Z`,home_id:'2',away_id:'13',home_score:'100',away_score:'96',status_type_completed:'true',home_linescores:'[{"value":25,"period":1},{"value":25,"period":2},{"value":25,"period":3},{"value":25,"period":4}]',away_linescores:"[{'period': 1.0, 'value': 24.0, 'displayValue': '24'}\n {'value': 24.0, 'period': 2.0}\n {'value': 24.0, 'period': 3.0}\n {'value': 24.0, 'period': 4.0}]"}]};
-}
+import {fixture} from './fixtures/hoopr.js';
+
 const sourceConfig={url:'https://example.org/data.json',licenseUrl:'https://example.org/license',redistributionAllowed:true,rights:{status:'verified',originalSourcePermissionUrl:'https://example.org/original-permission',reviewedAt:'2026-10-20',scope:['public-redistribution']}};
 test('Mapea 30 franquicias y el año final de temporada',()=>{assert.equal(Object.keys(nbaTeams).length,30);assert.equal(nbaTeams['9'],'GSW');assert.equal(seasonLabel(2025),'2024-25');assert.equal(seasonLabel(2026),'2025-26');assert.throws(()=>seasonLabel('mal'));});
 test('Parser de cuartos admite repr original sin eval, prórrogas y orden de claves',()=>{const f=fixture();assert.deepEqual(parseLinescores(f.schedule[0].away_linescores),[24,24,24,24]);assert.deepEqual(parseLinescores([1,2,3,4,5]),[1,2,3,4,5]);assert.throws(()=>parseLinescores("[__import__('os').system('echo BAD')]"));assert.throws(()=>parseLinescores('[{"value":10,"period":1}]'));assert.throws(()=>parseLinescores('[{"value":1,"period":1},{"value":2,"period":2},{"value":3,"period":2},{"value":4,"period":4}]'));});

@@ -38,7 +38,7 @@ const numeric=['points','rebounds','assists','threeMade','threeAttempted','field
 export function validateDataset(input){
  if(!input||!Array.isArray(input.records)||!Array.isArray(input.schedule))throw Error('Se necesitan records y schedule como listas.');
  if(!input.meta||!['demo','imported','real'].includes(input.meta.mode)||!input.meta.source)throw Error('Indica meta.mode y meta.source.');
- if(input.records.length>100000)throw Error('Máximo 100.000 registros.');
+ if(input.records.length>300000)throw Error('Máximo 300.000 registros.');
  const ids=new Set();
  const records=input.records.map((r,i)=>{
  if(typeof r.id!=='string'||!r.id||ids.has(r.id))throw Error(`ID ausente o duplicado en fila ${i+1}`);ids.add(r.id);

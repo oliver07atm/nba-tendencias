@@ -7,18 +7,19 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node tests/engine.test.js && node tests/hoopr.test.js",
+    "test": "node tests/engine.test.js && node tests/hoopr.test.js && node tests/local-history.test.js",
     "update-data": "node scripts/update-data.mjs",
     "import:hoopr": "node scripts/import-hoopr.mjs"
   },
   "dependencies": {
+    "lucide-react": "^0.468.0",
+    "papaparse": "^5.5.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "recharts": "^3.1.0",
-    "lucide-react": "^0.468.0",
-    "papaparse": "^5.5.3"
+    "recharts": "^3.1.0"
   },
   "devDependencies": {
+    "fake-indexeddb": "^6.2.6",
     "vite": "^7.1.0"
   }
 }

@@ -35,7 +35,7 @@ npm run import:hoopr -- \
 
 Repite el proceso para añadir una tercera temporada. La clave estable `entityId` mantiene al jugador aunque cambie de nombre de presentación o equipo. Cada actuación usa partido+jugador; una copia idéntica se deduplica, un conflicto se rechaza. La unión siempre queda como importada sin verificar y no mezcla demostración con histórico. El reporte corresponde al nuevo lote; el total de registros combinado aparece en la salida del comando.
 
-La interfaz mantiene sus filtros y permite elegir 100, 150 o 200 partidos una vez que existan registros suficientes. La importación manual desde Datos carga un único conjunto completo en memoria y reemplaza el conjunto anterior, sin persistir tras recargar. No se combinan archivos automáticamente desde el navegador. Límite: 64 MB y 100.000 registros; todavía no hay fragmentación de carga.
+La interfaz mantiene sus filtros y permite elegir 100, 150 o 200 partidos una vez que existan registros suficientes. La interfaz de Datos también permite seleccionar los tres CSV, combinar temporadas y guardar en IndexedDB sin programar. Consulta la [guía de importación personal](importacion-personal.md). Máximo 64 MB por CSV de origen, 256 MB por JSON/CSV normalizado y 300.000 registros combinados; todavía no hay carga fragmentada. La importación local no equivale a publicar una base de datos en GitHub.
 
 ## Revisar antes de habilitar datos públicos
 

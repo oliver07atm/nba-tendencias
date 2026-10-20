@@ -15,6 +15,7 @@ const clean=v=>typeof v==='string'?v.trim():v;
 const missing=v=>v==null||['','NA','N/A','null','nan','NaN'].includes(clean(v));
 const yes=v=>v===true||String(v).toLowerCase()==='true';
 export function readHooprCsv(text){
+ if(typeof text!=='string'||!text.trim())throw Error('El CSV está vacío.');
  const result=Papa.parse(text,{header:true,skipEmptyLines:'greedy',transformHeader:h=>h.replace(/^\uFEFF/,'').trim()});
  if(result.errors.length)throw Error('CSV hoopR inválido: '+result.errors[0].message);
  return result.data;
@@ -131,5 +132,6 @@ export function mergeHistoricalDatasets(datasets){
  if(modes.size!==1||modes.has('demo'))throw Error('No se permite mezclar demostración con históricos');
  datasets.forEach(validateDataset);
  const records=[...unique(datasets.flatMap(d=>d.records),r=>r.id,'Registro histórico').values()];
- return validateDataset({meta:{...datasets[0].meta,mode:'imported',accuracy:{status:'unverified'},rights:{...datasets[0].meta.rights,status:'unresolved'},coverage:{seasons:[...new Set(records.map(r=>r.season))].sort(),teams:new Set(records.map(r=>r.team)).size}},teams:[...new Map(datasets.flatMap(d=>d.teams||[]).map(t=>[t.id,t])).values()],schedule:[],records:records.sort((a,b)=>b.date.localeCompare(a.date)||a.id.localeCompare(b.id))});
+ const schedule=[...unique(datasets.flatMap(d=>d.schedule),g=>g.id,'Partido de calendario').values()];
+ return validateDataset({meta:{...datasets[0].meta,mode:'imported',accuracy:{status:'unverified'},rights:{...datasets[0].meta.rights,status:'unresolved'},coverage:{seasons:[...new Set(records.map(r=>r.season))].sort(),teams:new Set(records.map(r=>r.team)).size}},teams:[...new Map(datasets.flatMap(d=>d.teams||[]).map(t=>[t.id,t])).values()],schedule,records:records.sort((a,b)=>b.date.localeCompare(a.date)||a.id.localeCompare(b.id))});
 }
