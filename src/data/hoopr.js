@@ -57,7 +57,12 @@ export function parseLinescores(raw){
   }
  }
  if(!Array.isArray(list)||list.length<4)throw Error('Faltan cuartos');
- const values=list.map((x,i)=>typeof x==='number'?{period:i+1,value:x}:x).sort((a,b)=>Number(a.period)-Number(b.period));
+ // Historical exports store ordered value-only objects. Infer positions only
+ // when ALL periods are absent; never repair a partial/duplicate period list.
+ if(list.some(x=>x===null||typeof x!=='number'&&(typeof x!=='object'||Array.isArray(x))))throw Error('Cuarto inválido');
+ const implicit=list.every(x=>typeof x==='number'||!Object.hasOwn(x,'period'));
+ if(!implicit&&list.some(x=>typeof x==='number'||!Object.hasOwn(x,'period')))throw Error('Periodos parcialmente definidos');
+ const values=list.map((x,i)=>typeof x==='number'?{period:i+1,value:x}:implicit?{...x,period:i+1}:x).sort((a,b)=>Number(a.period)-Number(b.period));
  return values.map((x,i)=>{
   if(Number(x.period)!==i+1)throw Error('Periodos duplicados o incompletos');
   const n=number(x.value,'Puntos del cuarto');if(!Number.isInteger(n))throw Error('Puntos de cuarto no enteros');return n;
@@ -81,7 +86,11 @@ function stats(row,team=false,periods=4){
 }
 export function convertHoopr({players,teams,schedule}){
  if(![players,teams,schedule].every(Array.isArray))throw Error('Se necesitan jugadores, equipos y calendario');
- const report={input:{players:players.length,teams:teams.length,schedule:schedule.length},excluded:{nonNbaGames:0,incompleteGames:0,dnp:0,missingPlayerStats:0,unmatchedPlayers:0},issues:[],issuesCount:0};
+ const report={input:{players:players.length,teams:teams.length,schedule:schedule.length},excluded:{nonNbaGames:0,incompleteGames:0,dnp:0,missingPlayerStats:0,unmatchedPlayers:0},rejections:[],issues:[],issuesCount:0};
+ const reject=(scope,reason)=>{
+  const group=report.rejections.find(r=>r.scope===scope&&r.reason===reason);
+  if(group)group.count++;else report.rejections.push({scope,reason,count:1});
+ };
  const issue=(id,message)=>{report.issuesCount++;if(report.issues.length<30)report.issues.push({gameId:id,message});};
  const schedules=unique(schedule,r=>String(r.game_id||r.id),'Partido');
  const teamRows=unique(teams,r=>`${r.game_id}:${r.team_id}`,'Equipo/partido');
@@ -89,8 +98,8 @@ export function convertHoopr({players,teams,schedule}){
  const records=[],games=new Map(),teamInfo=new Map();
  for(const [gameId,g] of schedules){
   const home=nbaTeams[String(g.home_id)],away=nbaTeams[String(g.away_id)];
-  if(!home||!away||home===away||!competitions[Number(g.season_type)]){report.excluded.nonNbaGames++;continue;}
-  if(!yes(g.status_type_completed)){report.excluded.incompleteGames++;continue;}
+  if(!home||!away||home===away||!competitions[Number(g.season_type)]){report.excluded.nonNbaGames++;reject('games','Franquicia o competición fuera de la cobertura NBA');continue;}
+  if(!yes(g.status_type_completed)){report.excluded.incompleteGames++;reject('games','Calendario no marcado como finalizado');continue;}
   try{
    const season=seasonLabel(g.season),competition=competitions[Number(g.season_type)];
    if(!/T.*(?:Z|[+-]\d{2}:?\d{2})$/.test(g.date)||!Number.isFinite(Date.parse(g.date)))throw Error('Fecha sin zona horaria');
@@ -108,18 +117,18 @@ export function convertHoopr({players,teams,schedule}){
    validateDataset({meta:{mode:'imported',source:'Revisión local'},records:batch,schedule:[]});
    records.push(...batch);games.set(gameId,{id:gameId,home,away,date,season,competition,status:'completed',source:'ESPN vía SportsDataverse'});
    for(const r of [h,a])teamInfo.set(nbaTeams[r.team_id],{id:nbaTeams[r.team_id],name:r.team_display_name||nbaTeams[r.team_id]});
-  }catch(e){report.excluded.incompleteGames++;issue(gameId,e.message);}
+  }catch(e){report.excluded.incompleteGames++;reject('games',e.message);issue(gameId,e.message);}
  }
  for(const r of playerRows.values()){
-  if(yes(r.did_not_play)){report.excluded.dnp++;continue;}
+  if(yes(r.did_not_play)){report.excluded.dnp++;reject('players','DNP: no participó');continue;}
   const gameId=String(r.game_id),g=games.get(gameId),team=nbaTeams[r.team_id];
-  if(!g||![g.home,g.away].includes(team)){report.excluded.unmatchedPlayers++;continue;}
+  if(!g||![g.home,g.away].includes(team)){report.excluded.unmatchedPlayers++;reject('players',!g?'Sin partido aceptado en el calendario':'Equipo ajeno al partido');continue;}
   try{
    if(missing(r.athlete_id)||missing(r.athlete_display_name)||!['false',false].includes(r.did_not_play))throw Error('Identidad o DNP desconocido');
    if(seasonLabel(r.season)!==g.season||competitions[Number(r.season_type)]!==g.competition)throw Error('Temporada de jugador incompatible');
    const out={...stats(r),id:`espn:game:${gameId}:player:${r.athlete_id}`,gameId,sourceGameId:gameId,kind:'player',entity:r.athlete_display_name,entityId:`espn:player:${r.athlete_id}`,team,opponent:team===g.home?g.away:g.home,venue:team===g.home?'home':'away',season:g.season,competition:g.competition,date:g.date};
    validateDataset({meta:{mode:'imported',source:'Revisión local'},records:[out],schedule:[]});records.push(out);
-  }catch(e){report.excluded.missingPlayerStats++;issue(gameId,`${r.athlete_id}: ${e.message}`);}
+  }catch(e){report.excluded.missingPlayerStats++;reject('players',e.message);issue(gameId,`${r.athlete_id}: ${e.message}`);}
  }
  const dataset=validateDataset({meta:{mode:'imported',origin:'historical-unverified',source:'ESPN vía SportsDataverse · procedencia declarada, derechos y precisión sin verificar',rights:{status:'unresolved',repositoryLicense:'CC-BY-4.0 / MIT (alcances distintos)',upstream:'ESPN',upstreamTerms:'https://disneytermsofuse.com/english/'},accuracy:{status:'unverified'},coverage:{seasons:[...new Set(records.map(r=>r.season))].sort(),teams:teamInfo.size}},teams:[...teamInfo.values()],schedule:[],records:records.sort((a,b)=>b.date.localeCompare(a.date)||a.id.localeCompare(b.id))});
  // Historical completed games are not the next-game calendar used by trends.

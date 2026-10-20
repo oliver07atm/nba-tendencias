@@ -22,3 +22,17 @@ test('Muestra de 200 actuaciones atraviesa tres temporadas y filtra antes de lim
 test('No basta licencia del repositorio o bandera redistribución; exige permiso original',()=>{assert.throws(()=>assertSourceRights({...sourceConfig,rights:{status:'unresolved'}}));assert.throws(()=>assertSourceRights({...sourceConfig,redistributionAllowed:false}));assert.doesNotThrow(()=>assertSourceRights(sourceConfig));assert.throws(()=>assertPublishableDataset(convertHoopr(fixture()).dataset));});
 test('Exige comparaciones de cuatro métricas en dos partidos, sin autoaprobar importaciones',()=>{const d=convertHoopr(fixture()).dataset;d.meta={...d.meta,mode:'real',origin:'historical',rights:{status:'verified'},accuracy:{status:'verified',comparisons:[]}};assert.throws(()=>assertPublishableDataset(d));d.meta.accuracy.comparisons=['synthetic-1','synthetic-2'].map(gameId=>({gameId,playerId:'synthetic-player',checkedAt:'2026-10-20',sourceUrl:'https://example.org/synthetic-check',matched:true,metrics:['points','rebounds','assists','threeMade']}));assert.doesNotThrow(()=>assertPublishableDataset(d));d.meta.accuracy.comparisons[0].matched=false;assert.throws(()=>assertPublishableDataset(d));});
 test('La fuente real permanece desactivada y los derechos siguen pendientes',()=>{const config=JSON.parse(readFileSync(new URL('../data-source.json',import.meta.url)));assert.equal(config.enabled,false);assert.equal(config.rights.status,'unresolved');});
+test('Cuartos históricos sin period: JSON y repr, incluidos periodos extra',()=>{
+ assert.deepEqual(parseLinescores("[{'value': 20.0} {'value': 21.0} {'value': 22.0} {'value': 23.0} {'value': 7.0}]"),[20,21,22,23,7]);
+ assert.deepEqual(parseLinescores('[{"value":20},{"value":21},{"value":22},{"value":23}]'),[20,21,22,23]);
+ const f=fixture(2024);f.schedule[0].home_linescores="[{'value': 25.0} {'value': 25.0} {'value': 25.0} {'value': 25.0}]";f.schedule[0].away_linescores="[{'value': 24.0} {'value': 24.0} {'value': 24.0} {'value': 24.0}]";
+ const {dataset,report}=convertHoopr(f);assert.equal(report.output.games,1);assert.equal(report.output.players,1);assert.equal(dataset.records.filter(r=>r.kind==='team').length,2);
+ f.schedule[0].home_score='101';assert.equal(convertHoopr(f).report.rejections[0].reason,'Marcador y cuartos no coinciden');
+});
+test('No repara periodos parciales, nulos, cuartos negativos, ausentes o fraccionarios',()=>{
+ for(const raw of [[{value:1,period:1},{value:2},{value:3},{value:4}],[null,null,null,null],[{value:1},{value:2},{value:3},{value:-4}],[{value:1},{value:2},{value:3},{value:4.5}],[{value:1},{value:2},{value:3},{}],[{value:1},{value:2},{value:3},{value:null}],"[{'value': 1} {'value': 2} {'value': 3}]","[{'value': 1, 'unexpected': 2} {'value': 2} {'value': 3} {'value': 4}]"]){assert.throws(()=>parseLinescores(raw));}
+});
+test('Agrupa todos los rechazos aunque los ejemplos estén limitados a 30',()=>{
+ const f=fixture();f.players=[];f.teams=[];f.schedule=Array.from({length:40},(_,i)=>({...f.schedule[0],game_id:String(i)}));
+ const {report}=convertHoopr(f);assert.equal(report.excluded.incompleteGames,40);assert.equal(report.issues.length,30);assert.equal(report.issuesCount,40);assert.deepEqual(report.rejections,[{scope:'games',reason:'Falta box score de uno de los equipos',count:40}]);
+});

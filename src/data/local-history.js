@@ -19,7 +19,12 @@ export function importSeasonTexts(texts,base=null){
  const years=[seasonOf(players,'jugadores',['game_id','season','athlete_id','athlete_display_name','team_id','did_not_play']),seasonOf(teams,'equipos',['game_id','season','team_id','team_score']),seasonOf(schedule,'calendario',['season','home_id','away_id','home_linescores','away_linescores'])];
  if(new Set(years).size!==1)throw Error('Los tres CSV deben pertenecer a la misma temporada. Selecciona los tres archivos correspondientes al mismo año.');
  const {dataset,report}=convertHoopr({players,teams,schedule});
- if(!dataset.records.length)throw Error('No se han encontrado actuaciones completas compatibles. Revisa los CSV, los cuartos y el formato de las estadísticas.');
+ if(!dataset.records.length){
+  const counts=`Calendario: ${report.input.schedule} filas; ${report.output.games} partidos aceptados; ${report.excluded.incompleteGames+report.excluded.nonNbaGames} rechazados.`;
+  const reasons=report.rejections.map(r=>`${r.scope==='games'?'Partidos':'Actuaciones'}: ${r.count} — ${r.reason}.`).join(' ');
+  const examples=report.issues.slice(0,3).map(i=>`${i.gameId}: ${i.message}`).join(' · ');
+  throw Error(`No se han encontrado actuaciones completas compatibles. ${counts} ${reasons}${examples?' Ejemplos: '+examples:''} Tu historial anterior no se ha modificado.`);
+ }
  const result=combineLocalHistory(dataset,base);
  return {dataset:result,report:{...report,addedRecords:result.records.length-(base?.records.length||0),duplicates:dataset.records.length+(base?.records.length||0)-result.records.length}};
 }

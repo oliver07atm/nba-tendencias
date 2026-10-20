@@ -46,3 +46,16 @@ test('IndexedDB bloqueado y errores de espacio no se presentan como guardado cor
  const real=globalThis.indexedDB;try{globalThis.indexedDB=undefined;await assert.rejects(loadHistory(),/no disponible/);await assert.rejects(saveHistory(importSeasonTexts(texts(fixture())).dataset));}finally{globalThis.indexedDB=real;}
  assert.match(storageError({name:'QuotaExceededError'}),/exporta el JSON/);assert.match(storageError(Error('blocked')),/navegación privada/);
 });
+test('Importa formato histórico y combina tres temporadas sin modificar la base',()=>{
+ const base=importSeasonTexts(texts(fixture(2026,'100000003')),importSeasonTexts(texts(fixture(2025,'100000002'))).dataset).dataset;
+ const before=JSON.stringify(base),f=fixture(2024,'100000001');
+ f.schedule[0].home_linescores="[{'value': 25.0} {'value': 25.0} {'value': 25.0} {'value': 25.0}]";f.schedule[0].away_linescores="[{'value': 24.0} {'value': 24.0} {'value': 24.0} {'value': 24.0}]";
+ const a=importSeasonTexts(texts(f),base);assert.equal(a.dataset.records.length,9);assert.equal(a.report.addedRecords,3);assert.equal(JSON.stringify(base),before);
+ const repeat=importSeasonTexts(texts(f),a.dataset);assert.equal(repeat.dataset.records.length,9);assert.equal(repeat.report.addedRecords,0);assert.equal(repeat.report.duplicates,3);
+});
+test('Importación rechazada detalla cantidades, motivos y ejemplos sin alterar IndexedDB',async()=>{
+ const saved=importSeasonTexts(texts(fixture()));await saveHistory(saved.dataset,{report:saved.report});const before=JSON.stringify(await loadHistory());
+ const f=fixture(2024);f.schedule[0].home_linescores='[]';
+ assert.throws(()=>importSeasonTexts(texts(f),saved.dataset),error=>{assert.match(error.message,/1 rechazados/);assert.match(error.message,/Partidos: 1 — Faltan cuartos/);assert.match(error.message,/100000001: Faltan cuartos/);assert.match(error.message,/no se ha modificado/);return true;});
+ assert.equal(JSON.stringify(await loadHistory()),before);await deleteHistory();
+});

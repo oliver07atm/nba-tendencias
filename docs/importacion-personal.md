@@ -56,3 +56,17 @@ El JSON conserva el historial completo, no solo el filtro de los gráficos. **Ex
 - **Eliminar historial local** ofrece una confirmación y borra el historial de este navegador. No borra tus CSV originales ni los JSON que hayas exportado.
 
 Los archivos y sus contenidos se leen en tu dispositivo. La web sí necesita cargar su propio código desde GitHub Pages; eso no supone subir tus estadísticas. No se ha implementado una instalación totalmente sin conexión.
+
+## Corrección de importación de 2023-24
+
+Los tres archivos `player_box_2024.csv`, `team_box_2024.csv` y `nba_schedule_2024.csv` de SportsDataverse se descargaron y probaron localmente. El calendario histórico representa los cuartos como una lista ordenada de objetos con `value`, sin `period`. El conversor exigía periodos explícitos y rechazaba todos los partidos completos; el mensaje genérico ocultaba esa causa.
+
+Ahora se acepta el orden original cuando **ningún** cuarto tiene `period`. Si hay periodos explícitos, deben estar todos definidos, ser consecutivos y no repetirse. Siguen siendo obligatorios al menos cuatro cuartos, puntuaciones enteras no negativas, periodos compatibles entre rivales, coincidencia entre la suma de cuartos y ambos marcadores, estadísticas completas de ambos equipos y estado finalizado. No se rellenan estadísticas ausentes.
+
+La prueba local produjo 31.004 registros de 2023-24 (28.366 de jugadores y 2.638 de equipos), de 1.319 partidos y las 30 franquicias. Se excluyeron dos entradas de calendario no finalizadas, un partido especial, 6.638 filas DNP y 24 actuaciones sin partido compatible. Las columnas de jugadores y calendario son iguales a las de 2025 y 2026; los equipos de 2026 añaden dos columnas de ventaja que el conversor no necesita. Los identificadores y el formato de finalización son compatibles.
+
+La combinación local con las temporadas 2024-25 y 2025-26 pasó de 62.220 a 93.224 registros. Repetir el lote de 2023-24 añadió cero registros y evitó 31.004 duplicados. Estos recuentos corresponden a las copias examinadas; la fuente podría actualizar los archivos posteriormente. La comprobación de puntos, rebotes, asistencias y triples contra las filas de entrada verifica la conversión, no una certificación independiente del proveedor original.
+
+Para volver a importar, recarga la página **sin borrar los datos del sitio**. Puedes exportar antes un JSON de respaldo. Selecciona los tres CSV terminados en `2024.csv`, mantén marcadas las opciones de combinar y guardar y pulsa **Convertir e importar temporada**. No hace falta volver a importar las otras temporadas ni cambiar IndexedDB.
+
+El informe de una importación correcta muestra ahora todos los motivos de exclusión con sus recuentos, además de ejemplos de incidencias. Si ningún partido es compatible, el error incluye filas de calendario, partidos aceptados/rechazados, motivos agrupados y ejemplos con identificadores; el historial previo no se modifica. Los informes antiguos guardados siguen siendo legibles. Los CSV examinados y los historiales convertidos no forman parte del repositorio ni del despliegue.
