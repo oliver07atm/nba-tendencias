@@ -3,5 +3,11 @@
   "name": "Fuente gratuita autorizada pendiente",
   "url": null,
   "licenseUrl": null,
-  "redistributionAllowed": false
+  "redistributionAllowed": false,
+  "rights": {
+    "status": "unresolved",
+    "originalSourcePermissionUrl": null,
+    "reviewedAt": null,
+    "scope": []
+  }
 }

@@ -75,7 +75,7 @@ Cada registro requiere `id` único, `kind` (`player` o `team`), `entity` (nombre
 
 Los registros `team` añaden `quarters`, `opponentQuarters` (listas de al menos 4 números, prórrogas opcionales) y `opponentStats` con las mismas estadísticas numéricas del rival. `points` debe coincidir con la suma de `quarters`. En equipos, `entity` debe coincidir con `team`.
 
-CSV usa los mismos nombres de columnas; **solo contiene records**, por lo que no carga calendario. Usa comillas CSV estándar y JSON dentro de celdas `quarters`, `opponentQuarters` y `opponentStats`. Separador coma. Hay un ejemplo válido en `public/data/ejemplo.csv`. Máximo 30 MB o 100.000 registros. Los archivos importados se muestran como importados sin verificar aunque declaren `real`.
+CSV usa los mismos nombres de columnas; **solo contiene records**, por lo que no carga calendario. Usa comillas CSV estándar y JSON dentro de celdas `quarters`, `opponentQuarters` y `opponentStats`. Separador coma. Hay un ejemplo válido en `public/data/ejemplo.csv`. Máximo 64 MB o 100.000 registros. Los archivos importados se muestran como importados sin verificar aunque declaren `real`.
 
 ## Preparación de actualización automática
 
@@ -86,11 +86,20 @@ Cuando exista una fuente **gratuita y con permiso documentado para almacenar, tr
 1. Implementa la transformación al esquema anterior si la fuente no lo proporciona directamente. El adaptador actual solo descarga JSON normalizado; no conecta NBA/ESPN/365Scores.
 2. Configura `data-source.json`: `enabled: true`, nombre, `url` HTTPS, `licenseUrl` y `redistributionAllowed: true`, tras comprobar las condiciones. No incrustes credenciales.
 3. Ejecuta `npm run update-data`, `npm test` y `npm run build`. Un error impide reemplazar el archivo anterior. El proveedor debe declarar `meta.mode: real`.
-4. Versiona un `public/data/current.json` inicial válido para conservar una copia de referencia. El workflow actualiza la copia del build, no hace commits automáticos.
+4. Documenta permiso de la fuente original y dos comparaciones de P/R/A/triples siguiendo [el procedimiento](docs/importar-hoopr.md). El actualizador los exige antes de publicar. Versiona un `public/data/current.json` inicial válido para conservar una copia de referencia. El workflow actualiza la copia del build, no hace commits automáticos.
 5. En Settings → Secrets and variables → Actions → Variables, crea `DATA_SOURCE_ENABLED=true`. Esto habilita la ejecución diaria a las 08:17 UTC. Sin esta variable el job programado se omite. La actualización se incluye en el mismo build que se publica; el JSON queda en el artefacto de Pages.
 
 El plan no requiere gastos. No hay fuente habilitada ni promesa de datos en directo; hay que evaluar la licencia, cobertura, disponibilidad y límites del futuro proveedor. El modo real representa lo declarado por esa fuente, no una auditoría independiente.
 
 ## Próximas mejoras
 
-Datos reales autorizados para los 30 equipos, plantillas históricas con IDs estables, tratamiento de traspasos, calendario actual, historial incremental, estadísticas parciales con valores ausentes y filtros de tendencias más avanzados. La primera versión usa nombres como identificadores de jugador y no resuelve homónimos. La muestra puede ser menor que N si no hay suficientes partidos.
+Datos reales autorizados para los 30 equipos, plantillas históricas con IDs estables, tratamiento de traspasos, calendario actual, historial incremental, estadísticas parciales con valores ausentes y filtros de tendencias más avanzados. El formato acepta `entityId` estable y conserva compatibilidad con los datos de demostración anteriores; el adaptador hoopR utiliza IDs de jugador y distingue homónimos y traspasos. La muestra puede ser menor que N si no hay suficientes partidos.
+
+## Revisión de SportsDataverse / ESPN
+
+Se ha inspeccionado la cobertura de 2024-25 y 2025-26. **No se publican esos datos: derechos de la fuente original y precisión aún sin verificar.** La licencia CC BY 4.0 del productor no prueba por sí sola permiso de ESPN. La web sigue mostrando demostración.
+
+- [Investigación, cobertura observada, licencias y limitaciones](docs/fuentes-nba.md).
+- [Conversor local de CSV y combinación de temporadas](docs/importar-hoopr.md): `npm run import:hoopr`. No descarga datos ni publica su salida; solo permite escribir en `work/`.
+- Los gráficos y filtros conservan su funcionamiento. Se admiten IDs estables, historial de traspasos, homónimos, dos o más temporadas y muestras de 100/150/200 actuaciones disponibles.
+- `npm test` incluye las pruebas originales y casos nuevos del importador y los controles de publicación. Las fixtures de estas pruebas son inventadas, no resultados reales.

@@ -16,7 +16,17 @@ export function value(row,stat,period='full',against=false){
  if(stat==='ra')return r.rebounds+r.assists;
  return r[stat];
 }
-export function filterRows(rows,f={}){return rows.filter(r=>(!f.entity||r.entity===f.entity)&&(!f.venue||r.venue===f.venue)&&(!f.opponent||r.opponent===f.opponent)&&(!f.competition||r.competition===f.competition)&&(!f.seasons?.length||f.seasons.includes(r.season))).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,f.limit==='all'||!f.limit?Infinity:Number(f.limit));}
+export const entityKey=r=>r.entityId||r.entity;
+export function entityOptions(rows,kind){
+ const map=new Map();
+ for(const row of [...rows].sort((a,b)=>new Date(b.date)-new Date(a.date))){
+  if(row.kind!==kind)continue;
+  const id=entityKey(row);if(!map.has(id))map.set(id,{id,label:row.entity,team:row.team});
+ }
+ const values=[...map.values()];const counts=new Map();values.forEach(v=>counts.set(v.label,(counts.get(v.label)||0)+1));
+ return values.map(v=>({...v,label:counts.get(v.label)>1?`${v.label} · ${v.team}`:v.label})).sort((a,b)=>a.label.localeCompare(b.label,'es'));
+}
+export function filterRows(rows,f={}){return rows.filter(r=>(!f.entity||entityKey(r)===f.entity)&&(!f.venue||r.venue===f.venue)&&(!f.opponent||r.opponent===f.opponent)&&(!f.competition||r.competition===f.competition)&&(!f.seasons?.length||f.seasons.includes(r.season))).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,f.limit==='all'||!f.limit?Infinity:Number(f.limit));}
 export function summarize(rows,stat,line,direction='over',period='full',against=false){
  if(!Number.isFinite(Number(line)))throw Error('La línea debe ser un número');
  const data=rows.map(r=>({...r,value:value(r,stat,period,against)})).filter(r=>Number.isFinite(r.value));
@@ -56,11 +66,13 @@ export function parseImport(text,name){
 }
 export function detectTrends(dataset,limit=20){
  const teams=new Set(dataset.schedule.flatMap(g=>[g.home,g.away]));
- const groups=new Map();dataset.records.filter(r=>teams.has(r.team)).forEach(r=>{const key=r.kind+':'+r.entity;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
+ const groups=new Map();dataset.records.forEach(r=>{const key=r.kind+':'+entityKey(r);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
  return [...groups.values()].flatMap(rows=>{
+ rows.sort((a,b)=>new Date(b.date)-new Date(a.date));
+ if(!teams.has(rows[0].team))return [];
  const stats=rows[0].kind==='player'?['points','rebounds','assists','threeMade','pra']:['points','allowed','threeMade','rebounds','margin'];
  return stats.flatMap(stat=>{const sample=filterRows(rows,{limit});if(sample.length<5)return [];
  const sorted=sample.map(r=>value(r,stat)).sort((a,b)=>a-b);const line=Math.floor(sorted[Math.floor(sorted.length/2)])-.5;
- return ['over','under'].map(direction=>({...summarize(sample,stat,line,direction),entity:rows[0].entity,kind:rows[0].kind,team:rows[0].team,stat,line,direction}));});
+ return ['over','under'].map(direction=>({...summarize(sample,stat,line,direction),entity:rows[0].entity,entityId:entityKey(rows[0]),kind:rows[0].kind,team:rows[0].team,stat,line,direction}));});
  });
 }
