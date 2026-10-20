@@ -13,7 +13,9 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
-    if: github.event_name != 'schedule' || vars.DATA_SOURCE_ENABLED == 'true'
+    timeout-minutes: 10
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,8 +27,41 @@ jobs:
       - name: Actualizar desde fuente autorizada, si está configurada
         if: github.event_name != 'pull_request'
         run: npm run update-data
+      - name: Recuperar última descarga pública del calendario
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          if git ls-remote --exit-code --heads origin calendar-data > /dev/null; then
+            git fetch --no-tags origin calendar-data:refs/remotes/origin/calendar-data
+            git show origin/calendar-data:schedule.json > public/data/schedule.json
+          fi
+      - name: Consultar partidos NBA gratuitos (sin estadísticas ni alineaciones)
+        if: github.event_name != 'pull_request'
+        env:
+          BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+        run: npm run update-calendar
       - run: npm test
       - run: npm run build
+      - name: Conservar únicamente el calendario público para futuras actualizaciones
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          snapshot_dir="$RUNNER_TEMP/nba-calendar-snapshot"
+          if git show-ref --verify --quiet refs/remotes/origin/calendar-data; then
+            git worktree add -B calendar-data "$snapshot_dir" origin/calendar-data
+          else
+            git worktree add --detach "$snapshot_dir" HEAD
+            git -C "$snapshot_dir" switch --orphan calendar-data
+          fi
+          cp public/data/schedule.json "$snapshot_dir/schedule.json"
+          git -C "$snapshot_dir" config user.name 'github-actions[bot]'
+          git -C "$snapshot_dir" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$snapshot_dir" add -- schedule.json
+          if ! git -C "$snapshot_dir" diff --cached --quiet; then
+            git -C "$snapshot_dir" commit -m 'Actualizar calendario público NBA'
+            git -C "$snapshot_dir" push origin HEAD:refs/heads/calendar-data
+          fi
+          git worktree remove "$snapshot_dir"
       - uses: actions/upload-artifact@v4
         with:
           name: web-estatica

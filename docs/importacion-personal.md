@@ -26,7 +26,7 @@ Puedes elegir últimos 5, 10, 15, 20, 30, 50, 100, 150, 200 y 300; una cantidad 
 
 Los registros se identifican como **históricos de procedencia declarada, pendientes de verificación**. La conversión valida su formato y ciertas coherencias, pero no los convierte en estadísticas oficiales verificadas. Las filas DNP, estadísticas incompletas o partidos incompatibles se excluyen. Abre **Ver informe de la última importación CSV** para consultar los recuentos e incidencias.
 
-El histórico de actuaciones no es un calendario de próximos partidos. La sección de tendencias de próximos encuentros necesita un calendario futuro compatible; importar una temporada terminada no inventa ese calendario. La demostración mantiene su calendario de ejemplo.
+El histórico de actuaciones no es un calendario de próximos partidos. El calendario real de BALLDONTLIE se descarga por separado y permite conectar esos equipos con tu historial sin modificarlo. Las tendencias utilizan sus próximos encuentros y los registros personales activos; las asociaciones históricas no acreditan plantillas actuales. La demostración mantiene su calendario de ejemplo, seleccionable expresamente. Consulta la [guía del calendario](calendario-balldontlie.md).
 
 ## Conservarlo en el navegador
 

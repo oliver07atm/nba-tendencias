@@ -7,9 +7,10 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node tests/engine.test.js && node tests/hoopr.test.js && node tests/local-history.test.js",
+    "test": "node tests/engine.test.js && node tests/hoopr.test.js && node tests/local-history.test.js && node tests/schedule.test.js",
     "update-data": "node scripts/update-data.mjs",
-    "import:hoopr": "node scripts/import-hoopr.mjs"
+    "import:hoopr": "node scripts/import-hoopr.mjs",
+    "update-calendar": "node scripts/update-calendar.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

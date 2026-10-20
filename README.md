@@ -1,19 +1,19 @@
 # NBA Tendencias
 
-Primera versión funcional en español con **React, Vite y Recharts**, estática y preparada para GitHub Pages. No utiliza servicios de pago, cuentas de prueba, bases de datos externas ni claves secretas.
+Primera versión funcional en español con **React, Vite y Recharts**, estática y preparada para GitHub Pages. No utiliza servicios de pago ni cuentas de prueba. El calendario real usa una clave gratuita exclusivamente en GitHub Actions; los históricos personales permanecen en el navegador.
 
 ## Estado de los datos
 
-**Todos los partidos, horarios, resultados, estadísticas y plantillas iniciales son DEMOSTRACIÓN.** Los nombres de equipos y jugadores sirven para ilustrar la navegación; no acreditan plantillas vigentes. Hay 6 equipos, 18 jugadores y 7.680 registros sintéticos (320 por entidad), repartidos entre varias temporadas. No se descargan resultados reales. El generador es determinista.
+**El calendario real de BALLDONTLIE está separado de las estadísticas.** Consulta la [guía del calendario y su configuración](docs/calendario-balldontlie.md). Las estadísticas iniciales son **DEMOSTRACIÓN**; puedes activar tu historial personal importado. Los nombres de equipos y jugadores sirven para ilustrar la navegación; no acreditan plantillas vigentes. Hay 6 equipos, 18 jugadores y 7.680 registros sintéticos (320 por entidad), repartidos entre varias temporadas. El generador de demostración es determinista. El calendario remoto no inventa partidos ni acredita plantillas actuales.
 
 ### Investigación de fuentes (20 de octubre de 2026)
 
-- [BALLDONTLIE: documentación oficial](https://docs.balldontlie.io/#account-tiers): el nivel gratuito incluye equipos, jugadores y partidos, pero Game Player Stats no está en el nivel gratuito. No se ha contratado ni conectado; no cubre gratuitamente todo el alcance.
+- [BALLDONTLIE: documentación oficial](https://docs.balldontlie.io/#account-tiers): el nivel gratuito incluye equipos, jugadores y partidos, pero Game Player Stats no está en el nivel gratuito. Se conecta exclusivamente Games para el calendario. No cubre gratuitamente las estadísticas individuales ni las alineaciones.
 - [nba_api](https://github.com/swar/nba_api): cliente de código abierto con licencia MIT. Su licencia de software no equivale a una autorización de redistribuir todos los datos obtenidos.
 - [Condiciones de uso de NBA.com](https://www.nba.com/termsofuse): hay condiciones específicas para estadísticas y bases de datos. No se ha establecido autorización para este producto ni se ha integrado extracción automática.
 - ESPN y 365Scores: referencias visuales/de contenido; no se asume permiso de scraping. No hay extractores implementados.
 
-Por tanto, **la conexión real y la cobertura de los 30 equipos siguen pendientes**. No se confunden frecuencias con probabilidades o rentabilidad.
+El calendario real cubre las 30 franquicias; la publicación de estadísticas individuales sigue desactivada. No se confunden frecuencias con probabilidades o rentabilidad.
 
 ## Ejecutar y verificar
 
@@ -77,7 +77,11 @@ Los registros `team` añaden `quarters`, `opponentQuarters` (listas de al menos 
 
 CSV usa los mismos nombres de columnas; **solo contiene records**, por lo que no carga calendario. Usa comillas CSV estándar y JSON dentro de celdas `quarters`, `opponentQuarters` y `opponentStats`. Separador coma. Hay un ejemplo válido en `public/data/ejemplo.csv`. Máximo 256 MB para JSON/CSV normalizado y 300.000 registros. En el formulario de tres archivos, cada CSV admite hasta 64 MB. Los archivos importados se muestran como importados sin verificar aunque declaren `real`.
 
-## Preparación de actualización automática
+## Calendario real automático
+
+El workflow consulta exclusivamente partidos gratuitos de BALLDONTLIE con `BALLDONTLIE_API_KEY` desde GitHub Secrets, cada día a las 08:17 UTC. Publica un JSON mínimo y conserva la última descarga en `calendar-data`. El calendario no se guarda en IndexedDB ni modifica el historial personal. [Guía de uso, privacidad, configuración y límites](docs/calendario-balldontlie.md).
+
+## Preparación de actualización automática de estadísticas
 
 `data-source.json` está **desactivado**. `npm run update-data` no hace peticiones mientras siga así. La interfaz busca `data/current.json` y usa `demo.json` si no está disponible.
 
@@ -87,17 +91,17 @@ Cuando exista una fuente **gratuita y con permiso documentado para almacenar, tr
 2. Configura `data-source.json`: `enabled: true`, nombre, `url` HTTPS, `licenseUrl` y `redistributionAllowed: true`, tras comprobar las condiciones. No incrustes credenciales.
 3. Ejecuta `npm run update-data`, `npm test` y `npm run build`. Un error impide reemplazar el archivo anterior. El proveedor debe declarar `meta.mode: real`.
 4. Documenta permiso de la fuente original y dos comparaciones de P/R/A/triples siguiendo [el procedimiento](docs/importar-hoopr.md). El actualizador los exige antes de publicar. Versiona un `public/data/current.json` inicial válido para conservar una copia de referencia. El workflow actualiza la copia del build, no hace commits automáticos.
-5. En Settings → Secrets and variables → Actions → Variables, crea `DATA_SOURCE_ENABLED=true`. Esto habilita la ejecución diaria a las 08:17 UTC. Sin esta variable el job programado se omite. La actualización se incluye en el mismo build que se publica; el JSON queda en el artefacto de Pages.
+5. En Settings → Secrets and variables → Actions → Variables, crea `DATA_SOURCE_ENABLED=true`. Esta variable pertenecía a la actualización de estadísticas. El calendario ya se actualiza diariamente a las 08:17 UTC sin esa variable; las estadísticas siguen desactivadas. La actualización se incluye en el mismo build que se publica; el JSON queda en el artefacto de Pages.
 
-El plan no requiere gastos. No hay fuente habilitada ni promesa de datos en directo; hay que evaluar la licencia, cobertura, disponibilidad y límites del futuro proveedor. El modo real representa lo declarado por esa fuente, no una auditoría independiente.
+El plan no requiere gastos. No hay fuente de estadísticas individuales habilitada ni promesa de seguimiento en directo; hay que evaluar la licencia, cobertura, disponibilidad y límites del futuro proveedor. El modo real representa lo declarado por esa fuente, no una auditoría independiente.
 
 ## Próximas mejoras
 
-Datos reales autorizados para los 30 equipos, plantillas históricas con IDs estables, tratamiento de traspasos, calendario actual, historial incremental, estadísticas parciales con valores ausentes y filtros de tendencias más avanzados. El formato acepta `entityId` estable y conserva compatibilidad con los datos de demostración anteriores; el adaptador hoopR utiliza IDs de jugador y distingue homónimos y traspasos. La muestra puede ser menor que N si no hay suficientes partidos.
+Datos reales autorizados para los 30 equipos, plantillas históricas con IDs estables, tratamiento de traspasos, ampliación de fechas del calendario, historial incremental, estadísticas parciales con valores ausentes y filtros de tendencias más avanzados. El formato acepta `entityId` estable y conserva compatibilidad con los datos de demostración anteriores; el adaptador hoopR utiliza IDs de jugador y distingue homónimos y traspasos. La muestra puede ser menor que N si no hay suficientes partidos.
 
 ## Revisión de SportsDataverse / ESPN
 
-Se ha inspeccionado la cobertura de 2024-25 y 2025-26. **No se publican esos datos: derechos de la fuente original y precisión aún sin verificar.** La licencia CC BY 4.0 del productor no prueba por sí sola permiso de ESPN. La web sigue mostrando demostración.
+Se ha inspeccionado la cobertura de 2024-25 y 2025-26. **No se publican esos datos: derechos de la fuente original y precisión aún sin verificar.** La licencia CC BY 4.0 del productor no prueba por sí sola permiso de ESPN. La web conserva estadísticas de demostración como alternativa al historial personal; el calendario real se obtiene por separado de BALLDONTLIE.
 
 - [Investigación, cobertura observada, licencias y limitaciones](docs/fuentes-nba.md).
 - [Conversor local de CSV y combinación de temporadas](docs/importar-hoopr.md): `npm run import:hoopr`. No descarga datos ni publica su salida; solo permite escribir en `work/`.
@@ -111,7 +115,7 @@ Se han revisado Highlightly NBA API, TheSportsDB y API-NBA. **Ninguna está apro
 - [Comparación de cobertura, límites, condiciones y recomendación](docs/alternativas-api-gratuitas.md).
 - [Cómo guardar una posible clave gratuita en GitHub Secrets](docs/claves-api.md).
 
-No se ha añadido una clave, un adaptador autenticado o un workflow de descarga. La demostración y la desactivación de actualizaciones se conservan.
+Esas alternativas no están conectadas. BALLDONTLIE se conecta únicamente para el calendario gratuito; la demostración y la desactivación de estadísticas automáticas se conservan.
 
 ## Historial personal en el navegador
 
@@ -119,4 +123,4 @@ En **Datos → Importar estadísticas NBA desde CSV**, selecciona jugadores, equ
 
 Con el guardado activado, IndexedDB lo recupera al volver a abrir la web. **Exportar historial JSON** permite trasladarlo al iPhone y cargarlo desde **Importar JSON o CSV**. El guardado depende del navegador y no sustituye una copia JSON de seguridad. La demostración permanece disponible y los datos importados no se publican en GitHub.
 
-Consulta la [guía de uso sin programar](docs/importacion-personal.md). La publicación de una fuente remota y las actualizaciones automáticas siguen desactivadas; esta función solo procesa archivos seleccionados por el usuario.
+Consulta la [guía de uso sin programar](docs/importacion-personal.md). Las actualizaciones de estadísticas individuales siguen desactivadas; esta función solo procesa archivos seleccionados por el usuario. La actualización del calendario real es independiente y no toca IndexedDB.
