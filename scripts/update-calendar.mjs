@@ -6,7 +6,7 @@ if(process.env.GITHUB_ACTIONS!=='true'){console.error('La conexión autenticada 
 const file=new URL('../public/data/schedule.json',import.meta.url);let previous=null;
 try{previous=validateSchedule(JSON.parse(await readFile(file,'utf8')));}catch{}
 const apiKey=process.env.BALLDONTLIE_API_KEY;
-const result=await refreshCalendar({apiKey,previous});
+const result=await refreshCalendar({apiKey,previous,initialDelayMs:13000});
 const serialized=JSON.stringify(result.snapshot);
 if(apiKey&&serialized.includes(apiKey)){console.error('Salida bloqueada por seguridad. No se escribe ni publica la respuesta.');process.exit(1);}
 const tmp=new URL('../public/data/schedule.tmp',import.meta.url);await writeFile(tmp,serialized);await rename(tmp,file);

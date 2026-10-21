@@ -1,0 +1,8 @@
+import React from 'react';
+import {canary} from '../engine.js';
+import {canaryDay} from '../data/schedule.js';
+import {monthDays,shiftMonth} from '../data/calendar-view.js';
+export default function CalendarMonth({month,day,selected,counts,onMonth,onDay,now}){
+ const today=canaryDay(now),title=canary(month+'-01T12:00:00Z',{month:'long',year:'numeric'});
+ return <section className="panel month-calendar" aria-label="Calendario mensual"><div className="month-navigation"><button className="secondary" aria-label="Mes anterior" onClick={()=>onMonth(shiftMonth(month,-1))}>←</button><h2 aria-live="polite">{title}</h2><button className="secondary" aria-label="Mes siguiente" onClick={()=>onMonth(shiftMonth(month,1))}>→</button></div><div className="month-weekdays" aria-hidden="true">{['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d=><span key={d}>{d}</span>)}</div><div className="month-days">{monthDays(month).map((date,i)=>date?<button key={date} className={'month-day'+(date===today?' today':'')+(selected&&date===day?' selected':'')} aria-label={`${canary(date+'T12:00:00Z',{day:'numeric',month:'long',year:'numeric'})}: ${counts.get(date)||0} partidos descargados con estos filtros`} aria-pressed={selected&&date===day} aria-current={date===today?'date':undefined} onClick={()=>onDay(date)}><strong>{Number(date.slice(-2))}</strong><span>{counts.get(date)||0}<small> partidos</small></span>{!!counts.get(date)&&<i/>}</button>:<span key={'empty'+i} className="month-blank"/>)}</div><p className="muted">Pulsa un día para ver sus tarjetas. Los recuentos respetan equipo y estado; un cero significa que no hay encuentros descargados con esos filtros.</p></section>;
+}

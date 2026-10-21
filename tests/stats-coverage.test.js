@@ -42,9 +42,9 @@ const raw=(id,extra={})=>({id,date:'2026-10-21',datetime:date,status:'Final',hom
 const runtime=raws=>{let calls=0;return {fetchImpl:async url=>{assert.equal(new URL(url).pathname,'/v1/games');calls++;return new Response(JSON.stringify({data:raws,meta:{next_cursor:null}}));},wait:async()=>{},clock:()=>0,get calls(){return calls;}};};
 test('Conserva finales de la temporada fuera de la ventana al volver tras semanas, sin peticiones de estadísticas',async()=>{
  const previous=snapshot([game(777771,{day:'2026-10-02',date:'2026-10-02T20:00:00Z'}),game(777772,{day:'2026-06-02',date:'2026-06-02T20:00:00Z'}),game(777773,{status:'scheduled',day:'2026-10-03',date:'2026-10-03T20:00:00Z'})]),before=JSON.stringify(previous),rt=runtime([raw(999991)]);
- const result=await refreshCalendar({previous,now:new Date('2026-10-21T10:00:00Z'),apiKey:'synthetic-test',...rt});assert.equal(result.ok,true);assert.deepEqual(result.snapshot.games.map(g=>g.id),['bdl:game:777771','bdl:game:999991']);assert.equal(result.snapshot.meta.archive.retainedFinals,1);assert.equal(rt.calls,1);assert.equal(JSON.stringify(previous),before);
- assert.equal(result.snapshot.games[0].observedAt,previous.meta.updatedAt);assert.equal(result.snapshot.games[1].observedAt,'2026-10-21T10:00:00.000Z');
- const again=await refreshCalendar({previous:result.snapshot,now:new Date('2026-10-21T10:00:00Z'),apiKey:'synthetic-test',...runtime([raw(999991)])});assert.deepEqual(again.snapshot.games,result.snapshot.games);
+ const result=await refreshCalendar({previous,now:new Date('2026-10-21T10:00:00Z'),apiKey:'synthetic-test',...rt});assert.equal(result.ok,true);assert.deepEqual(result.snapshot.games.map(g=>g.id),['bdl:game:777772','bdl:game:777771','bdl:game:777773','bdl:game:999991']);assert.equal(result.snapshot.meta.archive.retainedFinals,2);assert.equal(rt.calls,1);assert.equal(JSON.stringify(previous),before);
+ assert.equal(result.snapshot.games[0].observedAt,previous.meta.updatedAt);assert.equal(result.snapshot.games.at(-1).observedAt,'2026-10-21T10:00:00.000Z');
+ const again=await refreshCalendar({previous:{...result.snapshot,meta:{...result.snapshot.meta,seasonScan:null}},now:new Date('2026-10-21T10:00:00Z'),apiKey:'synthetic-test',...runtime([raw(999991)])});assert.deepEqual(again.snapshot.games,result.snapshot.games);
 });
 test('Las revisiones del calendario reemplazan el mismo ID y no conservan un final obsoleto',async()=>{
  const previous=snapshot([game()]);

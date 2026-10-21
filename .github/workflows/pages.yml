@@ -35,7 +35,7 @@ jobs:
             git fetch --no-tags origin calendar-data:refs/remotes/origin/calendar-data
             git show origin/calendar-data:schedule.json > public/data/schedule.json
           fi
-      - name: Consultar partidos NBA gratuitos (sin estadísticas ni alineaciones)
+      - name: "Actualizar calendario gratuito: temporada e incrementos"
         if: github.event_name != 'pull_request'
         env:
           BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}

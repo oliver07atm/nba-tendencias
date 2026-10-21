@@ -2,6 +2,8 @@
 
 Revisión: **21/10/2026**. Objetivo: 0 €, uso personal para análisis relacionado con apuestas, frontend público en GitHub Pages. **No se ha encontrado una fuente gratuita que hayamos podido aprobar en cobertura y permisos para este caso. La actualización automática de actuaciones continúa desactivada.** No equivale a afirmar que no exista ninguna en el mercado.
 
+> El calendario se amplió posteriormente con vista mensual, descarga inicial por temporada y revisiones incrementales/semanales. Consulta [el funcionamiento actual del calendario](calendario-balldontlie.md). Las actuaciones individuales siguen desactivadas.
+
 ## Arquitectura comprobada
 
 - Actions descarga `/v1/games` de BALLDONTLIE una vez al día (08:17 UTC, ejecución sujeta a las demoras de GitHub). La clave solo se utiliza allí. Publica un JSON de calendario y marcadores. No es seguimiento en directo ni incluye box scores.

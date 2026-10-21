@@ -32,17 +32,20 @@ export function normalizeGame(g){
  return {id:`bdl:game:${g.id}`,sourceId:g.id,home,away,date,day:date?canaryDay(date):sourceDate,sourceDate,status:state,
   homeScore:['final','in_progress','suspended','abandoned'].includes(state)?score(g.home_team_score):null,
   awayScore:['final','in_progress','suspended','abandoned'].includes(state)?score(g.visitor_team_score):null,
-  competition:g.postseason===true?'Playoffs':g.ist_stage?'NBA Cup':'NBA',source:SCHEDULE_SOURCE};
+  season:Number.isInteger(g.season)?g.season:null,competition:g.ist_stage||g.season_type==='ist'?'NBA Cup':g.season_type==='playin'?'Play-in':g.postseason===true||g.season_type==='playoffs'?'Playoffs':g.season_type==='preseason'?'Pretemporada':'NBA',source:SCHEDULE_SOURCE};
 }
 export function sortGames(games){return [...games].sort((a,b)=>a.day.localeCompare(b.day)||(a.date||`${a.day}T23:59:59Z`).localeCompare(b.date||`${b.day}T23:59:59Z`)||a.id.localeCompare(b.id));}
 export function validateSchedule(input){
  if(!input||input.meta?.source!==SCHEDULE_SOURCE||!Array.isArray(input.games)||input.games.length>5000)throw Error('Calendario no compatible');
  if(input.meta.updatedAt!==null&&!isoDate(input.meta.updatedAt))throw Error('Fecha de actualización inválida');
  if(input.meta.updatedAt===null&&input.games.length)throw Error('Calendario sin procedencia temporal');
+ const scan=input.meta.seasonScan;
+ if(scan!=null&&(!Number.isInteger(scan.year)||scan.year<1946||scan.year>9998||!isoDate(scan.completedAt)||scan.returnedGames!==undefined&&(!Number.isInteger(scan.returnedGames)||scan.returnedGames<0||scan.returnedGames>5000)))throw Error('Revisión de temporada inválida');
  const ids=new Set();for(const g of input.games){
   if(typeof g.id!=='string'||!/^bdl:game:\d+$/.test(g.id)||ids.has(g.id)||!NBA_TEAMS.some(t=>t.id===g.home)||!NBA_TEAMS.some(t=>t.id===g.away)||g.home===g.away||!validDay(g.day)||g.date!==null&&(!isoDate(g.date)||canaryDay(g.date)!==g.day)||!Object.hasOwn(STATUS_LABELS,g.status))throw Error('Partido de calendario inválido');
   ids.add(g.id);for(const k of ['homeScore','awayScore'])if(g[k]!==null&&(!Number.isInteger(g[k])||g[k]<0))throw Error('Marcador inválido');
   if(g.observedAt!==undefined&&!isoDate(g.observedAt))throw Error('Fecha de consulta del partido inválida');
+  if(g.lastCheckAttemptAt!==undefined&&!isoDate(g.lastCheckAttemptAt))throw Error('Fecha de intento de consulta inválida');
  }
  return {...input,games:sortGames(input.games)};
 }
@@ -50,7 +53,8 @@ export function calendarWarning(snapshot,loadError='',now=new Date()){
  if(loadError)return loadError;
  if(!snapshot?.meta.updatedAt)return 'Todavía no hay una descarga válida del calendario. No se muestran partidos ficticios.';
  if(snapshot.meta.lastError)return `La última consulta falló (${snapshot.meta.lastError}). Se conserva la última descarga válida.`;
+ if(snapshot.meta.recheck?.error)return `Calendario próximo actualizado; quedan partidos antiguos por revisar (${snapshot.meta.recheck.error}). Sus estados mantienen la fecha de su última consulta.`;
  if(new Date(now)-new Date(snapshot.meta.updatedAt)>36*3600000)return 'El calendario lleva más de 36 horas sin actualizarse. Los horarios y estados pueden haber cambiado.';
  return '';
 }
-export function upcomingGames(snapshot,now=new Date()){const today=canaryDay(now),end=addDays(today,14);return (snapshot?.games||[]).filter(g=>g.day>=today&&g.day<=end&&['scheduled','in_progress','delayed'].includes(g.status));}
+export function upcomingGames(snapshot,now=new Date(),{allDates=false}={}){const today=canaryDay(now),end=addDays(today,14);return (snapshot?.games||[]).filter(g=>g.day>=today&&(allDates||g.day<=end)&&(allDates?!['final','canceled','abandoned'].includes(g.status):['scheduled','in_progress','delayed'].includes(g.status)));}

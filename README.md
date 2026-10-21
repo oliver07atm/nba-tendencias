@@ -140,3 +140,9 @@ React Router con HashRouter conserva los enlaces a partidos y análisis, los fil
 ## Identidades y retiradas sin modificar el historial
 
 **Datos → Identidades y estados de jugadores** permite importar y exportar correcciones JSON (10 MB), consultar el informe de enlaces y revisar estados activo/retirado/desconocido con fuente y fecha. Las correcciones se guardan en una tercera base local, sin sustituir los históricos ni las plantillas. Solo las retiradas confirmadas se excluyen del selector y de las tendencias individuales; los resultados de equipos conservan todos sus registros. [Guía de importación, estados, evidencias y formato](docs/identidades-y-estados.md).
+
+## Calendario mensual y temporada publicada
+
+En **Partidos** puedes avanzar por meses, elegir fecha y filtrar por equipo/estado. **Solo tarjetas** conserva la vista de próximos 14 días; las listas largas tienen páginas de 30 partidos. Los filtros y la página se conservan al volver desde un partido o un gráfico. Las tendencias de un partido admiten cualquier fecha futura descargada.
+
+Actions intenta descargar inicialmente todos los encuentros publicados de 2026-27 y revisa ese listado semanalmente. Los demás días actualiza fechas cercanas y partidos atrasados por ID, conservando los anteriores sin duplicarlos. La interfaz muestra la cobertura realmente obtenida y avisa si falta una descarga. Los cruces aún no publicados de NBA Cup/playoffs no se inventan. No se modifica IndexedDB ni se activan estadísticas individuales. [Uso, cobertura, permisos, límites y pruebas](docs/calendario-balldontlie.md).

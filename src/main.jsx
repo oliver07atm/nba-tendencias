@@ -54,7 +54,7 @@ function App(){
  const analysisRecords=useMemo(()=>playerRecords(canonicalRecords(data?.records||[]),rosters,directory),[data,rosters,directory]);
  useEffect(()=>{refreshPublishedCalendar();const refresh=()=>{if(document.visibilityState==='visible')refreshPublishedCalendar();};document.addEventListener('visibilitychange',refresh);const calendarTimer=setInterval(refresh,15*60000),timer=setInterval(()=>setNow(new Date()),60000);return()=>{document.removeEventListener('visibilitychange',refresh);clearInterval(calendarTimer);clearInterval(timer);};},[refreshPublishedCalendar]);
  const coverage=useMemo(()=>statsCoverage(analysisRecords,calendar,{mode:data?.meta.mode}),[analysisRecords,calendar,data?.meta.mode]);
- const trendSchedule=useMemo(()=>calendarMode==='demo'&&data?.meta.mode==='demo'?data.schedule:upcomingGames(calendar,now),[calendarMode,data,calendar,now]);
+ const trendSchedule=useMemo(()=>calendarMode==='demo'&&data?.meta.mode==='demo'?data.schedule:upcomingGames(calendar,now,{allDates:true}),[calendarMode,data,calendar,now]);
  const demoCache=React.useRef(null);
  const getDemo=async()=>{if(demoCache.current)return demoCache.current;const response=await fetch(import.meta.env.BASE_URL+'data/demo.json');if(!response.ok)throw Error('No se pudo cargar la demostración. Comprueba tu conexión.');const demo=validateDataset(await response.json());demoCache.current=demo;return demo;};
  useEffect(()=>{let cancelled=false;(async()=>{
