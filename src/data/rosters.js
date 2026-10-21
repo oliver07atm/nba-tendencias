@@ -50,6 +50,14 @@ export function verifiedRoster(team,rosters,now=new Date()){
  return t.players.filter(p=>membershipState(p,now)==='confirmed');
 }
 export function verifiedTeamMap(rosters,now){const map=new Map();for(const t of rosters?.teams||[])for(const p of verifiedRoster(t.id,rosters,now))map.set(rosterPlayerKey(p),t.id);return map;}
+// Trend analysis may use the last reviewed roster with an explicit freshness
+// warning. A historical game, pending membership or future review never assigns
+// a player to a forthcoming opponent.
+export function trendRosterMemberships(rosters,now=new Date()){
+ const map=new Map();
+ for(const t of rosters?.teams||[])for(const p of t.players)if(rosters.season===ROSTER_SEASON&&p.membership?.status==='reviewed'&&(!p.membership.season||p.membership.season===rosters.season)&&Number.isFinite(Date.parse(p.membership.checkedAt))&&Date.parse(p.membership.checkedAt)<=Number(now))map.set(rosterPlayerKey(p),{team:t.id,name:p.name,state:membershipState(p,now),checkedAt:p.membership.checkedAt});
+ return map;
+}
 export function rosterPlayer(rosters,key,directory){const id=identityAliases(rosters,directory).get(key)||key;return rosters?.teams.flatMap(t=>t.players).find(p=>rosterPlayerKey(p)===id);}
 
 // Freshness classifies the evidence; it never removes access to a player.

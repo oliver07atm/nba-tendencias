@@ -9,6 +9,7 @@ export function internalMatchUrl(value){
  if(typeof value!=='string'||value.length>3000||!/^\/partidos\/[^/?#]+(?:\?[^#]*)?$/.test(value))return null;
  return readRoute(value.split('?')[0]).page==='Partidos'?value:null;
 }
+export function internalTrendsUrl(value){return typeof value==='string'&&value.length<=3000&&/^\/tendencias(?:\?[^#]*)?$/.test(value)?value:null;}
 export function analysisFilters(search,kind='player'){
  const p=new URLSearchParams(search),get=(key,def)=>p.has(key)?p.get(key):def;
  const number=(key,def,min,max)=>{const n=Number(get(key,def));return Number.isFinite(n)?Math.max(min,Math.min(max,n)):def;};

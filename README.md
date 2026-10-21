@@ -15,6 +15,8 @@ Primera versión funcional en español con **React, Vite y Recharts**, estática
 
 El calendario real cubre las 30 franquicias; la publicación de estadísticas individuales sigue desactivada. No se confunden frecuencias con probabilidades o rentabilidad.
 
+Consulta la [guía de tendencias, líneas exploratorias, calidad descriptiva y cuotas manuales](docs/tendencias.md). Incluye ventanas 5/10/15/20, filtros combinables, acceso desde partidos y cálculos con una estimación predictiva introducida por el usuario, separados de la frecuencia histórica.
+
 ## Ejecutar y verificar
 
 Requiere Node.js 22.12+ (o 24).

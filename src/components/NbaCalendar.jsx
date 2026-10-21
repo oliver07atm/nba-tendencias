@@ -4,7 +4,7 @@ import {canary,entityKey,entityOptions} from '../engine.js';
 import {NBA_TEAMS} from '../data/nba-teams.js';
 import {teamPlayerSections} from '../data/rosters.js';
 import {canaryDay,addDays,sortGames,STATUS_LABELS,calendarWarning} from '../data/schedule.js';
-export default function NbaCalendar({directory,retired=new Set(),rosters,routeId,search,onSelect,onClose,onSearch,snapshot,loadError,records,statsMode,demoSchedule,mode,setMode,onOpen,onData,hasHistory,onUseHistory,now}){
+export default function NbaCalendar({onTrends,directory,retired=new Set(),rosters,routeId,search,onSelect,onClose,onSearch,snapshot,loadError,records,statsMode,demoSchedule,mode,setMode,onOpen,onData,hasHistory,onUseHistory,now}){
  const params=new URLSearchParams(search),range=params.get('calendarRange')||'next',day=params.get('calendarDay')||canaryDay(now);
  const change=(key,value)=>{const next=new URLSearchParams(search);next.set(key,value);onSearch('?'+next.toString());};
  const setRange=v=>change('calendarRange',v),setDay=v=>change('calendarDay',v);
@@ -33,6 +33,7 @@ export default function NbaCalendar({directory,retired=new Set(),rosters,routeId
   {routeId&&!selected&&<div className="panel empty">{!snapshot&&!loadError?'Cargando el calendario del partido…':'Este partido no está en el calendario descargado. Puede haber quedado fuera del intervalo disponible; no se inventa su detalle.'}</div>}
   {selected&&<section id="plantillas" className="panel roster"><div className="section-heading"><h2>{selected.away} <span className="muted">vs.</span> {selected.home}</h2><span>{selected.date?canary(selected.date,{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Hora por confirmar'} · {STATUS_LABELS[selected.status]}</span></div>
    <p className="historical-label">{demo?'DEMOSTRACIÓN · jugadores y estadísticas sintéticos':'Todos los jugadores disponibles están accesibles debajo. La plantilla actual y las asociaciones históricas se distinguen por su evidencia; una revisión antigua se avisa, no oculta al jugador. No se confirma disponibilidad, lesiones, titularidad ni alineación.'}</p>
+   {onTrends&&(demo||['scheduled','in_progress','delayed'].includes(selected.status))&&<button className="secondary" onClick={()=>onTrends(selected)}>Ver tendencias de este partido</button>}
    {!available.length&&<div className="empty"><p>Activa o importa tu historial personal para consultar estadísticas de este encuentro.</p>{hasHistory&&<button className="secondary" onClick={onUseHistory}>Usar mi historial</button>}<button className="text-button" onClick={onData}>Ir a Datos</button></div>}
    <div className="team-quicklinks" aria-label="Ir a un equipo">{[selected.away,selected.home].map(id=><button key={id} className="secondary" onClick={()=>document.getElementById('team-'+id)?.scrollIntoView({behavior:'smooth',block:'start'})}>Ir a {name(id)}</button>)}</div>
    <div className="roster-grid team-player-columns">{[selected.away,selected.home].map(id=>{
