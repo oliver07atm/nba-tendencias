@@ -1,0 +1,65 @@
+name: NBA Stat - inspección privada de identidades
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Escribe INSPECT_PLAYERS para autorizar una sola consulta cifrada'
+        required: true
+        type: string
+      no_external_clients:
+        description: 'Confirmo que no hay otros clientes externos activos usando la misma cuenta'
+        required: true
+        type: boolean
+        default: false
+      mode:
+        description: 'Perfil individual primero; lista paginada solo cuando se revise su esquema'
+        type: choice
+        options: [profile, players-list]
+        default: profile
+      player_id:
+        description: 'ID INTERNO NBA Stat (perfil individual)'
+        type: string
+        default: '1548'
+      team_id:
+        description: 'Opcional: ID INTERNO NBA Stat para filtrar la lista; nunca ID NBA/BDL'
+        type: string
+        default: ''
+      page:
+        description: 'Solo lista: una página de hasta 100 jugadores; sin paginación automática'
+        type: string
+        default: '1'
+permissions:
+  contents: write
+concurrency:
+  group: nbastat-account-quota
+  cancel-in-progress: false
+jobs:
+  inspect:
+    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'INSPECT_PLAYERS' && inputs.no_external_clients
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Reserva compartida, una consulta y cifrado en memoria
+        env:
+          NBASTAT_API_TOKEN: ${{ secrets.NBASTAT_API_TOKEN }}
+          NBASTAT_PROBE_PASSPHRASE: ${{ secrets.NBASTAT_PROBE_PASSPHRASE }}
+          CONFIRM_NBASTAT: ${{ inputs.confirmation }}
+          CONFIRM_NO_EXTERNAL_CLIENTS: ${{ inputs.no_external_clients }}
+          INSPECTION_MODE: ${{ inputs.mode }}
+          PLAYER_ID: ${{ inputs.player_id }}
+          TEAM_ID: ${{ inputs.team_id }}
+          PAGE: ${{ inputs.page }}
+        run: node scripts/inspect-nbastat-players.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nbastat-private-player-inspection
+          path: work/nbastat-player-sealed/review.sealed.json
+          retention-days: 1
+          if-no-files-found: ignore
+      - name: Eliminar copia cifrada del runner
+        if: always()
+        run: rm -f work/nbastat-player-sealed/review.sealed.json

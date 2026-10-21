@@ -154,3 +154,5 @@ Se ha registrado la autorización por correo comunicada por el usuario para publ
 El usuario ya ha comunicado la estructura de la primera respuesta real. El decoder lee los campos confirmados y mantiene pendientes sus significados. Hay una [segunda prueba manual cifrada](docs/nbastat-valores.md) para revisar valores sin publicar estadísticas: requiere una contraseña aleatoria separada en `NBASTAT_PROBE_PASSPHRASE`, conserva la misma cuota y no se ejecuta automáticamente.
 
 NBA Stat admite ahora la [importación privada del caso 1369 desde Datos](docs/nbastat-importacion-privada.md), con vista previa, correspondencias independientes, DNP separados y una capa local que alimenta gráficos y tendencias sin reemplazar el historial original. La sincronización masiva sigue desactivada.
+
+Las [identidades NBA Stat admiten evidencias alternativas al nacimiento](docs/nbastat-identidades-alternativas.md): referencia explícita NBA/ESPN o correspondencia confirmada por el proveedor. Hay una inspección cifrada manual del perfil 1548 y una vía por lotes, ambas inactivas hasta ejecución manual. No se inventan fechas ni se enlaza por nombre.

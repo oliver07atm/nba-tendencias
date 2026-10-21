@@ -1,3 +1,4 @@
+import {validNbaStatIdentityEvidence} from './identity-evidence.js';
 import {validateDataset} from '../../engine.js';
 import {NBA_TEAMS} from '../nba-teams.js';
 import {canaryDay} from '../schedule.js';
@@ -11,7 +12,7 @@ function canonicalProfile(url,key){try{const u=new URL(url),[source,,value]=key.
 export function validateNbaStatMappings(mapping){
  if(mapping?.version!==1||!Array.isArray(mapping.players)||!Array.isArray(mapping.teams))throw Error('Correspondencias NBA Stat no válidas');
  const seen=new Set(),targets=new Set();for(const p of mapping.players){
-  if(!id(p.sourceId)||! /^(?:nba|espn):player:[1-9]\d*$/.test(p.key)||!date(p.birthDate)||p.sourceBirthDate!==p.birthDate||p.canonicalBirthDate!==p.birthDate||p.status!=='reviewed'||!iso(p.checkedAt)||(!sourceUrl(p.sourceUrl)||new URL(p.sourceUrl).pathname!=='/api/v1/players/'+p.sourceId)||!canonicalProfile(p.canonicalUrl,p.key)||seen.has(p.sourceId)||targets.has(p.key))throw Error('Identidad NBA Stat pendiente, duplicada o sin evidencias de IDs y nacimiento');
+  if(!id(p.sourceId)||! /^(?:nba|espn):player:[1-9]\d*$/.test(p.key)||!date(p.birthDate)||p.canonicalBirthDate!==p.birthDate||!validNbaStatIdentityEvidence(p)||p.status!=='reviewed'||!iso(p.checkedAt)||(!sourceUrl(p.sourceUrl)||new URL(p.sourceUrl).pathname!=='/api/v1/players/'+p.sourceId)||!canonicalProfile(p.canonicalUrl,p.key)||seen.has(p.sourceId)||targets.has(p.key))throw Error('Identidad NBA Stat pendiente, duplicada o sin evidencias suficientes de IDs y nacimiento canónico');
   seen.add(p.sourceId);targets.add(p.key);
  }
  seen.clear();targets.clear();for(const t of mapping.teams){if(!id(t.sourceId)||!team(t.team)||!iso(t.checkedAt)||(!sourceUrl(t.sourceUrl)||new URL(t.sourceUrl).pathname!=='/api/v1/teams/'+t.sourceId)||seen.has(t.sourceId)||targets.has(t.team))throw Error('Equipo NBA Stat pendiente o duplicado');seen.add(t.sourceId);targets.add(t.team);}

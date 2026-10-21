@@ -63,5 +63,5 @@ export function decodeNbaStatResponse(body,{review=null,receivedAt=null,syntheti
 // Candidate list only; zero auto-links, no name-based joins or fabricated birth dates.
 export function nbaStatIdentityChecklist(decoded){
  if(!decoded?.players||!decoded?.game)fail('WIRE_ENVELOPE_INVALID');
- return {version:1,sourceGameId:decoded.game.sourceGameId,teams:[decoded.game.homeId,decoded.game.awayId].map(sourceId=>({sourceId,status:'pending',sourceUrl:'https://nbastat.io/api/v1/teams/'+sourceId})),players:decoded.players.map(p=>({sourceId:p.sourceId,reportedName:p.name,status:'pending',sourceUrl:'https://nbastat.io/api/v1/players/'+p.sourceId,requiredEvidence:['canonical NBA/ESPN ID and profile','source and canonical dates of birth','review date'],historicalAvailability:'not-assessed'}))};
+ return {version:1,sourceGameId:decoded.game.sourceGameId,teams:[decoded.game.homeId,decoded.game.awayId].map(sourceId=>({sourceId,status:'pending',sourceUrl:'https://nbastat.io/api/v1/teams/'+sourceId})),players:decoded.players.map(p=>({sourceId:p.sourceId,reportedName:p.name,status:'pending',sourceUrl:'https://nbastat.io/api/v1/players/'+p.sourceId,requiredEvidence:['canonical NBA/ESPN ID and profile','matching source DOB OR explicit NBA/ESPN reference OR provider-confirmed crosswalk','canonical DOB and review date'],historicalAvailability:'not-assessed'}))};
 }
