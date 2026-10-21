@@ -44,6 +44,5 @@ export function createNbaStatClient({config,token,readLedger,writeLedger,withLoc
  const id=n=>{if(!/^[1-9]\d*$/.test(String(n)))throw new NbaStatError('INVALID_SOURCE_ID');return String(n);};
  return {players:({page=1,teamId=null}={})=>{if(!Number.isSafeInteger(page)||page<1)throw new NbaStatError('INVALID_DISCOVERY_QUERY');const p=new URLSearchParams({page:String(page),per_page:'100'});if(teamId!==null)p.set('team_id',id(teamId));return get('/api/v1/players?'+p);},boxScore:gameId=>get('/api/v1/games/'+id(gameId)+'/boxscore'),player:playerId=>get('/api/v1/players/'+id(playerId)),teams:()=>get('/api/v1/teams'),games:({season,dateFrom,dateTo,page=1}={})=>{if(!/^\d{4}-\d{2}$/.test(season||'')||![dateFrom,dateTo].every(day)||dateFrom>dateTo||!Number.isSafeInteger(page)||page<1)throw new NbaStatError('INVALID_DISCOVERY_QUERY');const p=new URLSearchParams({season,date_from:dateFrom,date_to:dateTo,status:'Final',order:'asc',per_page:'100',page:String(page)});return get('/api/v1/games?'+p);}};
 }
-// The documentation does not specify the complete box-score wire schema.
-// Real response decoding intentionally fails closed until a private sample is reviewed.
-export function decodeNbaStatResponse(){throw new NbaStatError('WIRE_SCHEMA_UNVERIFIED');}
+// Structural decoding is available; value semantics still require an explicit per-game review.
+export {decodeNbaStatResponse} from './decoder.mjs';

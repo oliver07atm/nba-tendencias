@@ -1,0 +1,44 @@
+name: NBA Stat - revisión privada cifrada 1369
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Escribe VALIDATE_1369 para recuperar una muestra cifrada, sin publicarla en claro'
+        required: true
+        type: string
+      unused_account:
+        description: 'Cuenta sin uso durante 60 minutos y sin otros clientes activos'
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: nbastat-account-quota
+  cancel-in-progress: false
+jobs:
+  review:
+    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'VALIDATE_1369' && inputs.unused_account
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Una sola consulta, reserva durable y cifrado antes de cualquier archivo
+        env:
+          NBASTAT_API_TOKEN: ${{ secrets.NBASTAT_API_TOKEN }}
+          NBASTAT_PROBE_PASSPHRASE: ${{ secrets.NBASTAT_PROBE_PASSPHRASE }}
+          CONFIRM_NBASTAT: ${{ inputs.confirmation }}
+          CONFIRM_UNUSED_ACCOUNT: ${{ inputs.unused_account }}
+        run: node scripts/probe-nbastat-values.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nbastat-1369-encrypted-review
+          path: work/nbastat-sealed/review.sealed.json
+          retention-days: 1
+          if-no-files-found: ignore
+      - name: Eliminar copia cifrada del runner
+        if: always()
+        run: rm -f work/nbastat-sealed/review.sealed.json

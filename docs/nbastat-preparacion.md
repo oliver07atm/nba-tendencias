@@ -1,12 +1,12 @@
 # NBA Stat: prueba manual preparada, sincronización desactivada
 
-Revisión documental: 21/10/2026. **No se han realizado consultas autenticadas, creado tokens, descargado box scores reales ni publicado estadísticas NBA Stat.** No hay cambios en la web activa ni en sus bases personales. Este módulo no se importa desde `main.jsx`, ningún componente ni el workflow del calendario.
+Revisión documental: 21/10/2026. El usuario ha ejecutado la primera consulta autenticada y comunicado la estructura. **Esta actualización no realiza nuevas consultas ni publica estadísticas NBA Stat.** No hay cambios en la web activa ni en sus bases personales. Este módulo no se importa desde `main.jsx`, ningún componente ni el workflow del calendario.
 
 ## Qué sabemos y qué no
 
 La [documentación oficial](https://nbastat.io/developers/api) describe `GET /api/v1/games/{game_id}/boxscore`, autenticación Bearer y diez consultas por ventana móvil de sesenta minutos. Los IDs son internos; no equivalen a los de NBA, ESPN o BALLDONTLIE. Las colecciones usan página y tamaño de hasta cien. El endpoint de box score puede devolver jugadores vacíos para encuentros pendientes.
 
-La documentación consultada no muestra un esquema completo de los campos del box score, sus unidades de minutos, DNP, totales de equipo o cuartos. La cobertura 2026-27 ha sido confirmada por correo según el usuario; no se ha comprobado aún en una respuesta. No se ha encontrado una especificación OpenAPI enlazada que resuelva esos campos. `decodeNbaStatResponse()` lanza deliberadamente `WIRE_SCHEMA_UNVERIFIED`; **no se ha escrito un adaptador que adivine claves del JSON real**.
+La documentación consultada no muestra un esquema completo de los campos del box score, sus unidades de minutos, DNP, totales de equipo o cuartos. La cobertura 2026-27 ha sido confirmada por correo según el usuario; no se ha comprobado aún en una respuesta. No se ha encontrado una especificación OpenAPI enlazada que resuelva esos campos. `decodeNbaStatResponse()` ahora lee los campos de `data.game` y `data.players` comunicados por el usuario después de la primera prueba. Las semánticas siguen sin confirmar: devuelve pendiente sin un acta de revisión explícita. [Segunda comprobación cifrada y decoder](nbastat-valores.md).
 
 El usuario ha comunicado el 21/10/2026 una autorización definitiva por correo para recuperar, normalizar, almacenar y publicar JSON en este proyecto público, gratuito y no comercial, y la confirmación de cobertura 2026-27. Se registra como permiso confirmado **según declaración del usuario** (`permissionEvidence: user-reported-email`); no se ha inspeccionado ni publicado el correo. Este permiso específico no se interpreta como una licencia general para otros proyectos. Conservar el correo privadamente y cumplir las condiciones del proveedor.
 
@@ -104,7 +104,7 @@ El workflow necesita el `GITHUB_TOKEN` estándar con permiso `contents: write` (
 
 ### Siguiente fase después de obtener la estructura
 
-Revisar los campos reales del resumen, implementar el decoder y efectuar otra consulta controlada para comprobar valores sin publicar el cuerpo crudo. Revisar fecha/temporada/equipos/estado y marcador 121–113, número real de registros y duplicados, DNP/participación/desconocidos, unidades de minutos, totales, tiros y cuartos disponibles. La documentación no da el esquema completo: hoy no se suponen claves para hacer esas comprobaciones.
+El decoder estructural ya está preparado. Efectuar la [segunda comprobación cifrada](nbastat-valores.md) para revisar valores y completar sus reglas sin publicar el cuerpo crudo. Revisar fecha/temporada/equipos/estado y marcador 121–113, número real de registros y duplicados, DNP/participación/desconocidos, unidades de minutos, totales, tiros y cuartos disponibles. La documentación no da el esquema completo: hoy no se suponen claves para hacer esas comprobaciones.
 
 Verificar IDs internos NBA Stat contra las identidades NBA/ESPN ya contrastadas mediante perfiles, IDs y nacimiento. Cade Cunningham u otros no se dan por participantes por figurar en una plantilla. Si faltan datos o evidencia, el lote se mantiene pendiente; no inventar ceros o cuartos. Comparar P/R/A/triples con fuentes originales y probar en una copia local que la nueva actuación entra en gráficos y tendencias 5/10/15/20, conservando partidos de equipos anteriores. Repetir el lote y una corrección debe mantener IDs y no duplicar. Confirmar hashes/recuentos de los originales y aportaciones históricas de equipos.
 
