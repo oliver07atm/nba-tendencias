@@ -2,3 +2,7 @@ node_modules/
 dist/
 work/
 *.log
+
+# Credentials belong in a secure runtime or GitHub Secrets.
+.env
+.env.*

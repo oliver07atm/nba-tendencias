@@ -1,0 +1,65 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';import {mkdtemp,rm,stat,mkdir} from 'node:fs/promises';import {resolve} from 'node:path';
+import {indexedDB} from 'fake-indexeddb';
+import {nbaStatFixture} from './fixtures/nbastat.js';
+import {prepareNbaStatGame,applyNbaStatGame,emptyNbaStatUpdates,composeNbaStatView,queueNbaStatGame,dueNbaStatGames,finishNbaStatGame} from '../src/data/nbastat/updates.js';
+import {loadNbaStatSnapshot,saveNbaStatSnapshot,emptyNbaStatSnapshot} from '../src/data/nbastat/store.js';
+import {createNbaStatClient,emptyLedger,quotaDecision,HOUR,decodeNbaStatResponse} from '../scripts/lib/nbastat/client.mjs';
+import {privateQuotaStore} from '../scripts/lib/nbastat/private-store.mjs';
+import {filterRows,summarize,detectTrends} from '../src/engine.js';
+import {saveHistory,loadHistory} from '../src/data/history-store.js';
+const config=JSON.parse(readFileSync(new URL('../nbastat-source.json',import.meta.url)));
+const approvedFixtureConfig={enabled:true,personalPermission:'confirmed',publicJsonPermission:'confirmed',season2026Coverage:'confirmed',responseSchema:'verified',mode:'private-only'}; // Test-only approval, no actual permission assertion.
+const fakeClient=(extra={})=>{let state=emptyLedger(),time=Date.parse('2031-01-03T00:00:00Z'),calls=0;const client=createNbaStatClient({config:approvedFixtureConfig,token:'SYNTHETIC_NOT_A_REAL_TOKEN',clock:()=>time,readLedger:async()=>state,writeLedger:async v=>{state=structuredClone(v);},withLock:f=>f(),fetchImpl:async()=>{calls++;return new Response(JSON.stringify({data:[],synthetic:true}));},...extra});return {client,get calls(){return calls;},get state(){return state;},setTime:n=>{time=n;}};};
+const prepared=()=>{const f=nbaStatFixture();return prepareNbaStatGame(f.contract,f.mapping);};
+test('Configuración publicada bloquea toda llamada; el esquema real sigue sin adivinarse',async()=>{
+ let calls=0;const c=fakeClient({config,fetchImpl:async()=>{calls++;throw Error('must not run');}});await assert.rejects(c.client.boxScore('990000001'),/INTEGRATION_DISABLED/);assert.equal(calls,0);assert.throws(decodeNbaStatResponse,/WIRE_SCHEMA_UNVERIFIED/);
+ const wf=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');assert.ok(!wf.toLowerCase().includes('nbastat'));assert.equal(config.enabled,false);
+});
+test('IDs internos requieren evidencias y nacimiento; jamás se enlazan por nombre',()=>{
+ const {contract,mapping}=nbaStatFixture(),batch=prepareNbaStatGame(contract,mapping);assert.equal(batch.records.find(r=>r.kind==='player').entityId,'nba:player:990101');
+ mapping.players=[];const pending=prepareNbaStatGame(contract,mapping);assert.equal(pending.ready,false);assert.equal(pending.reason,'PENDING_PLAYERS');assert.equal(pending.pending[0].reason,'IDENTITY_UNLINKED');
+ const bad=nbaStatFixture();bad.mapping.players[0].sourceBirthDate='2000-02-02';assert.throws(()=>prepareNbaStatGame(bad.contract,bad.mapping),/nacimiento/);
+ const nameOnly=nbaStatFixture();nameOnly.mapping.players[0].sourceUrl='https://nbastat.io/';assert.throws(()=>prepareNbaStatGame(nameOnly.contract,nameOnly.mapping),/evidencias/);
+});
+test('DNP separado, cero real admitido con played=true y participación desconocida pendiente',()=>{
+ const f=nbaStatFixture(),b=prepareNbaStatGame(f.contract,f.mapping);assert.equal(b.dnp.length,1);assert.equal(b.records.filter(r=>r.kind==='player').length,2);assert.ok(b.records.every(r=>!r.id.endsWith('990003')));
+ Object.assign(f.contract.players[0].stats,{points:0,fieldMade:0,threeMade:0,assists:0});f.contract.game.homeScore=0;Object.assign(f.contract.teams[0].stats,{points:0,fieldMade:0,threeMade:0,assists:0});f.contract.teams[0].quarters=[0,0,0,0];assert.equal(prepareNbaStatGame(f.contract,f.mapping).records.find(r=>r.entityId==='nba:player:990101').points,0);
+ const unknown=nbaStatFixture();unknown.contract.players[0].played=null;assert.equal(prepareNbaStatGame(unknown.contract,unknown.mapping).ready,false);
+ const dnp=nbaStatFixture();dnp.contract.players[2].stats={points:1};assert.throws(()=>prepareNbaStatGame(dnp.contract,dnp.mapping),/DNP contradictorio/);
+});
+test('Campos ausentes/cuarto incoherente/duplicados/partido pendiente nunca se completan con ceros',()=>{
+ for(const mutate of [f=>delete f.contract.players[0].stats.assists,f=>f.contract.teams[0].quarters=[20],f=>f.contract.players.push(f.contract.players[0]),f=>f.contract.game.homeScore=21]){const f=nbaStatFixture();mutate(f);assert.throws(()=>prepareNbaStatGame(f.contract,f.mapping));}
+ const f=nbaStatFixture();f.contract.game.status='scheduled';assert.equal(prepareNbaStatGame(f.contract,f.mapping).ready,false);
+ const p=nbaStatFixture();delete p.contract.teams;const b=prepareNbaStatGame(p.contract,p.mapping);assert.equal(b.ready,true);assert.equal(b.teamPending,true);assert.ok(b.records.every(r=>r.kind==='player'));
+});
+test('Upsert de partido idempotente, correcciones sin duplicar y revisión incompleta/antigua rechazada',()=>{
+ const batch=prepared(),a=applyNbaStatGame(emptyNbaStatUpdates(),batch);assert.equal(a.applied,true);assert.throws(()=>applyNbaStatGame(emptyNbaStatUpdates(),{...batch,token:'DUMMY'}),/credenciales/);assert.equal(applyNbaStatGame(a.state,batch).reason,'DUPLICATE');assert.equal(applyNbaStatGame(a.state,{...batch,receivedAt:'2031-01-03T01:00:00.000Z'}).reason,'DUPLICATE');
+ const f=nbaStatFixture();f.contract.receivedAt='2031-01-03T02:00:00Z';f.contract.players[0].stats.points=21;f.contract.game.homeScore=21;f.contract.teams[0].stats.points=21;f.contract.teams[0].quarters=[5,5,5,6];const correction=prepareNbaStatGame(f.contract,f.mapping),b=applyNbaStatGame(a.state,correction);assert.equal(Object.keys(b.state.games).length,1);assert.equal(b.state.games[batch.sourceGame].records.length,batch.records.length);assert.equal(applyNbaStatGame(b.state,batch).reason,'OLDER_REVISION');
+ const incomplete=nbaStatFixture();delete incomplete.contract.teams;incomplete.contract.receivedAt='2031-01-03T03:00:00Z';assert.throws(()=>applyNbaStatGame(b.state,prepareNbaStatGame(incomplete.contract,incomplete.mapping)),/incompleta/);assert.throws(()=>applyNbaStatGame(a.state,{...correction,receivedAt:batch.receivedAt}),/misma fecha/);
+});
+test('Nueva actuación ficticia entra en series 5/10/15/20 y PRA sin alterar historial ni equipos anteriores',()=>{
+ const f=nbaStatFixture();f.contract.players[0].stats.points=30;f.contract.game.homeScore=30;f.contract.teams[0].stats.points=30;f.contract.teams[0].quarters=[8,8,7,7];const batch=prepareNbaStatGame(f.contract,f.mapping),template=batch.records.find(r=>r.entityId==='nba:player:990101'),old=Array.from({length:20},(_,i)=>({...template,id:'espn:game:'+String(880000+i)+':player:990201',sourceGameKey:'espn:game:'+String(880000+i),entityId:'espn:player:990201',team:i%2?'BOS':'LAL',opponent:'DET',points:27-i%10,date:new Date(Date.UTC(2030,11,31-i,20)).toISOString()})),base={meta:{mode:'imported',source:'FICTICIO',synthetic:true},records:old,schedule:[]},before=JSON.stringify(base),aliases=new Map([['espn:player:990201','nba:player:990101']]);
+ const view=composeNbaStatView(base,applyNbaStatGame(emptyNbaStatUpdates(),batch).state,{aliases}).dataset;
+ for(const n of [5,10,15,20]){const rows=filterRows(view.records.filter(r=>r.kind==='player'),{entity:'nba:player:990101',limit:n});assert.equal(rows.length,n);assert.equal(rows[0].id,template.id);assert.equal(summarize(rows,'pra',34.5).hits,1);assert.ok(rows.some(r=>r.team==='LAL'));}
+ const trends=detectTrends({...view,schedule:[{id:'FICTICIO',home:'BOS',away:'DET'}]},20,{stats:['points'],currentTeams:new Map([['nba:player:990101','BOS']])});assert.ok(trends.some(t=>t.entityId==='nba:player:990101'&&t.data.some(r=>r.id===template.id)));assert.equal(JSON.stringify(base),before);assert.equal(view.meta.attribution.name,'NBA Stat');assert.equal(view.meta.attribution.synthetic,true);assert.throws(()=>composeNbaStatView({...base,meta:{...base.meta,synthetic:false}},applyNbaStatGame(emptyNbaStatUpdates(),batch).state),/No se mezclan/);
+ const existing={...base,records:[...base.records,...batch.records.map(r=>({...r,id:r.id.replace('nbastat:game:990000001','espn:game:770000001'),sourceGameKey:'espn:game:770000001'}))]};assert.equal(composeNbaStatView(existing,applyNbaStatGame(emptyNbaStatUpdates(),batch).state,{aliases}).collisions.length,1);
+});
+test('Diez solicitudes en ventana móvil, reserva durable antes de HTTP y recuperación sin esperar una hora',async()=>{
+ const c=fakeClient();for(let i=0;i<10;i++)assert.equal((await c.client.boxScore('990000001')).deferred,false);assert.equal(c.calls,10);const pending=await c.client.boxScore('990000001');assert.equal(pending.deferred,true);assert.equal(c.calls,10);c.setTime(pending.notBefore);assert.equal((await c.client.boxScore('990000001')).deferred,false);assert.equal(c.calls,11);
+ const q=quotaDecision({version:1,attempts:[1000],blockedUntil:0},1001);assert.equal(q.state.attempts.length,1);
+ let called=false;const failure=fakeClient({writeLedger:async()=>{throw Error('private store failed');},fetchImpl:async()=>{called=true;}});await assert.rejects(failure.client.boxScore('990000001'));assert.equal(called,false);
+});
+test('429 no reintenta, guarda bloqueo, cuenta fallos y no expone cuerpo ni token en errores',async()=>{
+ const c=fakeClient({fetchImpl:async()=>new Response('SYNTHETIC_NOT_A_REAL_TOKEN body',{status:429,headers:{'Retry-After':'120','RateLimit-Remaining':'0'}})});await assert.rejects(c.client.boxScore('990000001'),e=>e.message==='HTTP_429');assert.equal(c.state.attempts.length,1);assert.equal((await c.client.boxScore('990000001')).deferred,true);assert.ok(c.state.blockedUntil>=Date.parse('2031-01-03T00:00:00Z')+HOUR);
+ const network=fakeClient({fetchImpl:async()=>{throw Error('SYNTHETIC_NOT_A_REAL_TOKEN');}});await assert.rejects(network.client.boxScore('990000001'),e=>e.message==='NETWORK');assert.equal(network.state.attempts.length,1);
+});
+test('Identificación y descubrimiento comparten cuota y utilizan únicamente rutas documentadas',async()=>{
+ const urls=[],c=fakeClient({fetchImpl:async(url,options)=>{urls.push(String(url));assert.equal(options.headers.Authorization,'Bearer SYNTHETIC_NOT_A_REAL_TOKEN');assert.equal(options.redirect,'error');return new Response('{}');}});await c.client.teams();await c.client.player('990001');await c.client.games({season:'2030-31',dateFrom:'2031-01-01',dateTo:'2031-01-02',page:2});await c.client.boxScore('990000001');await c.client.players({teamId:'99001'});assert.equal(c.state.attempts.length,5);assert.ok(urls.every(u=>u.startsWith('https://nbastat.io/api/v1/')&&!u.includes('TOKEN')));assert.equal(new URL(urls[2]).searchParams.get('page'),'2');assert.equal(new URL(urls[2]).searchParams.get('per_page'),'100');
+});
+test('Ledger privado sobrevive al reinicio, bloqueo exclusivo y permisos de archivo',async()=>{
+ await mkdir('work',{recursive:true});const dir=await mkdtemp(resolve('work/nbastat-quota-test-'));try{const store=privateQuotaStore(dir),ledger={version:1,attempts:[1000],blockedUntil:0};await store.withLock(()=>store.writeLedger(ledger));assert.deepEqual(await privateQuotaStore(dir).readLedger(),ledger);assert.equal((await stat(resolve(dir,'quota.json'))).mode&0o777,0o600);await store.withLock(async()=>{await assert.rejects(store.withLock(()=>{}),/QUOTA_LOCK_BUSY/);});assert.throws(()=>privateQuotaStore(resolve('public/data')),/PRIVATE_STATE_PATH/);}finally{await rm(dir,{recursive:true,force:true});}
+});
+test('Capa IndexedDB independiente, cola deduplicada y conflicto entre pestañas sin tocar originales',async()=>{
+ globalThis.indexedDB=indexedDB;const fixture=prepared(),base={meta:{mode:'imported',source:'FICTICIO',synthetic:true},records:fixture.records.map(r=>({...r,date:'2030-12-01T20:00:00Z'})),schedule:[]};await saveHistory(base);const before=JSON.stringify(await loadHistory()),snapshot=emptyNbaStatSnapshot();snapshot.updates=applyNbaStatGame(snapshot.updates,fixture).state;snapshot.queue=queueNbaStatGame(queueNbaStatGame({},'990000001','2031-01-03T01:00:00Z'),'990000001','2031-01-03T02:00:00Z');assert.equal(Object.keys(snapshot.queue).length,1);assert.equal(dueNbaStatGames(snapshot.queue,new Date('2031-01-03T00:00:00Z')).length,0);assert.equal(dueNbaStatGames(snapshot.queue,new Date('2031-01-03T03:00:00Z')).length,1);const deferred=finishNbaStatGame(snapshot.queue,'990000001',{retryAt:'2031-01-03T04:00:00Z'});assert.equal(dueNbaStatGames(deferred,new Date('2031-01-03T03:00:00Z')).length,0);assert.deepEqual(finishNbaStatGame(deferred,'990000001'),{});assert.equal(await saveNbaStatSnapshot(snapshot,0),1);const saved=await loadNbaStatSnapshot();assert.equal(saved.revision,1);assert.deepEqual(saved.updates,snapshot.updates);await assert.rejects(saveNbaStatSnapshot(snapshot,0),/Otra pestaña/);assert.equal(JSON.stringify(await loadHistory()),before);
+});

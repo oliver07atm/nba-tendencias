@@ -146,3 +146,7 @@ React Router con HashRouter conserva los enlaces a partidos y análisis, los fil
 En **Partidos** puedes avanzar por meses, elegir fecha y filtrar por equipo/estado. **Solo tarjetas** conserva la vista de próximos 14 días; las listas largas tienen páginas de 30 partidos. Los filtros y la página se conservan al volver desde un partido o un gráfico. Las tendencias de un partido admiten cualquier fecha futura descargada.
 
 Actions intenta descargar inicialmente todos los encuentros publicados de 2026-27 y revisa ese listado semanalmente. Los demás días actualiza fechas cercanas y partidos atrasados por ID, conservando los anteriores sin duplicarlos. La interfaz muestra la cobertura realmente obtenida y avisa si falta una descarga. Los cruces aún no publicados de NBA Cup/playoffs no se inventan. No se modifica IndexedDB ni se activan estadísticas individuales. [Uso, cobertura, permisos, límites y pruebas](docs/calendario-balldontlie.md).
+
+## Preparación de NBA Stat (desactivada)
+
+La infraestructura de cuota privada, cola, validación, revisiones por partido y capa separada de actualizaciones se prueba con datos ficticios. No se conecta a la web ni al calendario y no se ejecutan consultas reales. Faltan confirmar los permisos pendientes, cobertura 2026-27, esquema real del box score, correspondencias de IDs internos y entrega autorizada. [Diseño, limitaciones y pasos para el primer ensayo privado](docs/nbastat-preparacion.md).

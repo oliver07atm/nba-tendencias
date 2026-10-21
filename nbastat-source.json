@@ -1,0 +1,9 @@
+{
+  "enabled": false,
+  "personalPermission": "reported-by-user",
+  "publicJsonPermission": "pending",
+  "season2026Coverage": "pending",
+  "responseSchema": "unverified",
+  "mode": "private-only",
+  "source": "https://nbastat.io/developers/api"
+}

@@ -1,0 +1,8 @@
+// FICTION ONLY. Proposed internal contract, NOT an NBA Stat API response.
+// These names, IDs, dates and performances are invented. Never ship as real data.
+export function nbaStatFixture(){
+ const metrics=points=>({points,rebounds:4,assists:3,threeMade:1,threeAttempted:3,fieldMade:5,fieldAttempted:10,steals:1,blocks:0,turnovers:2,minutes:24});
+ const mapping={version:1,players:[['990001','990101'],['990002','990102']].map(([sourceId,nba])=>({sourceId,key:'nba:player:'+nba,status:'reviewed',birthDate:'2000-01-01',sourceBirthDate:'2000-01-01',canonicalBirthDate:'2000-01-01',checkedAt:'2031-01-03T00:00:00Z',sourceUrl:'https://nbastat.io/api/v1/players/'+sourceId,canonicalUrl:'https://www.nba.com/player/'+nba})),teams:[['99001','BOS'],['99002','DET']].map(([sourceId,team])=>({sourceId,team,checkedAt:'2031-01-03T00:00:00Z',sourceUrl:'https://nbastat.io/api/v1/teams/'+sourceId}))};
+ const contract={contract:'nba-tendencias-boxscore-v1',synthetic:true,complete:true,sourceGameId:'990000001',receivedAt:'2031-01-03T01:00:00Z',game:{status:'final',date:'2031-01-02T20:00:00Z',season:'2030-31',competition:'NBA',homeId:'99001',awayId:'99002',homeScore:20,awayScore:15},players:[{sourceId:'990001',name:'Jugador FICTICIO Alfa',teamId:'99001',played:true,stats:metrics(20)},{sourceId:'990002',name:'Jugador FICTICIO Beta',teamId:'99002',played:true,stats:metrics(15)},{sourceId:'990003',name:'Jugador FICTICIO DNP',teamId:'99001',played:false,reason:'DNP de prueba'}],teams:[{sourceId:'99001',stats:metrics(20),quarters:[5,5,5,5]},{sourceId:'99002',stats:metrics(15),quarters:[4,4,4,3]}]};
+ return {mapping,contract};
+}
