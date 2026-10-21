@@ -1,9 +1,12 @@
 {
   "enabled": false,
-  "personalPermission": "reported-by-user",
-  "publicJsonPermission": "pending",
-  "season2026Coverage": "pending",
+  "personalPermission": "confirmed",
+  "publicJsonPermission": "confirmed",
+  "season2026Coverage": "confirmed",
   "responseSchema": "unverified",
   "mode": "private-only",
-  "source": "https://nbastat.io/developers/api"
+  "source": "https://nbastat.io/developers/api",
+  "permissionEvidence": "user-reported-email",
+  "permissionReportedAt": "2026-10-21",
+  "attribution": "Statistics sourced from NBA Stat and published with permission. NBA Stat is not affiliated with or endorsed by the NBA."
 }

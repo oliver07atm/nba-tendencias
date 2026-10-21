@@ -1,4 +1,4 @@
-# NBA Stat: infraestructura privada preparada, conexión desactivada
+# NBA Stat: prueba manual preparada, sincronización desactivada
 
 Revisión documental: 21/10/2026. **No se han realizado consultas autenticadas, creado tokens, descargado box scores reales ni publicado estadísticas NBA Stat.** No hay cambios en la web activa ni en sus bases personales. Este módulo no se importa desde `main.jsx`, ningún componente ni el workflow del calendario.
 
@@ -6,11 +6,15 @@ Revisión documental: 21/10/2026. **No se han realizado consultas autenticadas, 
 
 La [documentación oficial](https://nbastat.io/developers/api) describe `GET /api/v1/games/{game_id}/boxscore`, autenticación Bearer y diez consultas por ventana móvil de sesenta minutos. Los IDs son internos; no equivalen a los de NBA, ESPN o BALLDONTLIE. Las colecciones usan página y tamaño de hasta cien. El endpoint de box score puede devolver jugadores vacíos para encuentros pendientes.
 
-La documentación consultada no muestra un esquema completo de los campos del box score, sus unidades de minutos, DNP, totales de equipo o cuartos. Tampoco acredita por sí sola la cobertura 2026-27. No se ha encontrado una especificación OpenAPI enlazada que resuelva esos campos. `decodeNbaStatResponse()` lanza deliberadamente `WIRE_SCHEMA_UNVERIFIED`; **no se ha escrito un adaptador que adivine claves del JSON real**.
+La documentación consultada no muestra un esquema completo de los campos del box score, sus unidades de minutos, DNP, totales de equipo o cuartos. La cobertura 2026-27 ha sido confirmada por correo según el usuario; no se ha comprobado aún en una respuesta. No se ha encontrado una especificación OpenAPI enlazada que resuelva esos campos. `decodeNbaStatResponse()` lanza deliberadamente `WIRE_SCHEMA_UNVERIFIED`; **no se ha escrito un adaptador que adivine claves del JSON real**.
 
-El usuario declara una autorización por correo para consultas automáticas, almacenamiento privado, análisis y presentación personal no comercial con atribución. Se registra como `reported-by-user`; no se ha inspeccionado ni publicado ese correo. Las [condiciones públicas](https://nbastat.io/terms), especialmente §§4 y 8, mantienen restricciones y no conceden por el mero acceso API derechos generales de redistribución. Quedan pendientes la aclaración de JSON públicos, 2026-27 y cualquier permiso de origen necesario para el uso concreto. Citar la fuente no sustituye esos permisos.
+El usuario ha comunicado el 21/10/2026 una autorización definitiva por correo para recuperar, normalizar, almacenar y publicar JSON en este proyecto público, gratuito y no comercial, y la confirmación de cobertura 2026-27. Se registra como permiso confirmado **según declaración del usuario** (`permissionEvidence: user-reported-email`); no se ha inspeccionado ni publicado el correo. Este permiso específico no se interpreta como una licencia general para otros proyectos. Conservar el correo privadamente y cumplir las condiciones del proveedor.
 
-`nbastat-source.json` está desactivado. El cliente exige resolver explícitamente los permisos pendientes antes de cualquier llamada. Si se deniega JSON público pero se confirma el uso privado y la cobertura, solo será viable el canal privado; esa denegación no invalida por sí sola una prueba privada autorizada. El modo futuro `private-inspection` permitirá recoger una primera muestra privada para revisar su esquema; el modo de ingestión exigirá además un esquema verificado. **La configuración actual no habilita ninguno**. No hay entradas ejecutables ni programaciones nuevas.
+La atribución exigida se conserva literalmente en la configuración y en el resumen de la prueba:
+
+> Statistics sourced from NBA Stat and published with permission. NBA Stat is not affiliated with or endorsed by the NBA.
+
+`nbastat-source.json` sigue con `enabled: false` y `responseSchema: unverified`. La autorización resuelve el bloqueo de permisos comunicado, **no certifica todavía la calidad, el esquema o las identidades de una respuesta**. La ingestión, la publicación de estadísticas y la sincronización automática permanecen desactivadas. La prueba manual descrita a continuación activa únicamente una inspección estructural de un endpoint fijo.
 
 ## Archivos preparados
 
@@ -29,7 +33,7 @@ flowchart LR
  C --> D[Box score privado y decoder por verificar]
  D --> E[Validación y correspondencias revisadas]
  E --> F[Revisiones completas por partido]
- F --> G[Entrega pendiente de permiso]
+ F --> G[Entrega pendiente de calidad y esquema]
  G --> H[Capa separada en IndexedDB]
  I[Historial original de solo lectura] --> J[Vista combinada]
  H --> J
@@ -69,28 +73,43 @@ Para la implementación futura: descubrir finales por intervalos solapados de fe
 
 Con quince partidos finalizados no caben quince box scores más descubrimiento/revisiones en una sola ventana. Habrá cola y varias ventanas; no se promete actualización inmediata. Identificar jugadores nuevos también consume solicitudes y puede necesitar horas adicionales. El cliente admite listas paginadas de jugadores (hasta cien por página) para descubrir IDs con menos consultas; esto no garantiza que esas listas incluyan nacimiento ni evita la verificación de identidad.
 
-El token futuro será `NBASTAT_API_TOKEN` en un proceso privado seguro (o GitHub Secrets si finalmente se autoriza el despliegue elegido). Nunca `VITE_…`, parámetros URL, navegador, CSV, snapshots, logs, artefactos ni este repositorio. No se ha creado ni leído ese secreto. El cliente recibe el token solo en memoria del servidor y no devuelve encabezados de autorización ni errores originales de red.
+El token será `NBASTAT_API_TOKEN` en GitHub Actions Secrets para la prueba manual descrita abajo. Nunca `VITE_…`, parámetros URL, navegador, CSV, snapshots, logs, artefactos ni este repositorio. No se ha creado ni leído ese secreto. El cliente recibe el token solo en memoria del servidor y no devuelve encabezados de autorización ni errores originales de red.
 
-## Entrega de los incrementos: decisión todavía pendiente
+## Entrega autorizada de incrementos: implementación pendiente
 
 GitHub Pages no ejecuta un recolector seguro ni puede acceder a IndexedDB con el navegador cerrado. Un recolector externo autorizado puede trabajar sin la web abierta; las escrituras del navegador y el refresco de gráficos necesitan abrirla.
 
-Si se autoriza JSON público: preparar manifiesto de toda la temporada con revisiones, atribución **NBA Stat · https://nbastat.io**, IDs estables y paquetes por partido. El navegador descargará desde su checkpoint y aplicará las revisiones en su capa separada; el manifiesto completo permitirá recuperar semanas sin abrir la web. Nunca se envían a Actions los históricos privados del navegador.
+Tras verificar calidad y esquema, preparar el canal JSON público autorizado: manifiesto de toda la temporada con revisiones, la atribución literal requerida, IDs estables y paquetes por partido. El navegador descargará desde su checkpoint y aplicará las revisiones en su capa separada; el manifiesto completo permitirá recuperar semanas sin abrir la web. Nunca se envían a Actions los históricos privados del navegador.
 
-Si solo se permite almacenamiento privado: Pages no debe servir esos JSON. Habrá que elegir un recolector/entrega privados que el usuario pueda mantener a 0 €, por ejemplo en su propio equipo encendido. HTTPS, autenticación local, protección de acceso y compatibilidad con Pages/iPhone necesitan un diseño adicional; no basta exponer un archivo privado en una URL pública ni colocar un token en JavaScript. La importación manual de un archivo permitido seguiría siendo una alternativa, no la automatización completa.
+## Primera prueba manual: Boston @ Detroit, 20/10/2026
 
-No se ha creado un feed público, workflow, servidor, conector de React ni botón que inicie una llamada real. Tampoco se han modificado los controles de publicación existentes para eludir los permisos.
+Caso comunicado por el proveedor a través del usuario: NBA Stat **1369**, `GET /api/v1/games/1369/boxscore`, Detroit 121–Boston 113, 35 registros de jugadores. Estos datos son una referencia comunicada, **no una comprobación realizada por esta integración**. Treinta y cinco registros no equivalen a treinta y cinco participantes. No se necesita gastar una consulta buscando un ID ya facilitado. No usar el ID BALLDONTLIE 21717855 como ID NBA Stat.
 
-## Primera prueba privada: Boston–Detroit, 20/10/2026
+### Configurar el secreto (sin programar)
 
-1. Recibir y conservar privadamente las aclaraciones sobre 2026-27 y JSON/redistribución, incluido el uso personal descrito y la atribución. No subir el correo al repositorio. Registrar la confirmación y escoger el canal de entrega; las banderas actuales siguen pendientes.
-2. Crear el token en el perfil de NBA Stat y guardarlo únicamente en el entorno seguro elegido. No enviarlo al chat. Preparar ledger privado exclusivo antes de cualquier solicitud, incluidas las de identificación.
-3. Buscar el partido con el endpoint documentado de juegos, temporada `2026-27`, fechas de margen 19–21 de octubre y estado `Final`, paginando si procede. Verificar horario/zona, equipos y estado de la respuesta. No reutilizar el ID BDL `21717855` ni uno ESPN como ID NBA Stat. Si no está disponible, informar y parar.
-4. En modo de inspección privada, consultar el box score por **su ID interno real**. Guardar la muestra fuera de GitHub/Pages y sin imprimirla en logs. Confirmar estructura, campos, unidades, DNP, partidos completos y si hay equipos/cuartos. Implementar entonces el decoder exacto; hoy está bloqueado deliberadamente.
-5. Verificar las correspondencias de los jugadores que realmente participaron, mediante IDs/perfiles y nacimiento, respetando el presupuesto. Cade/Tatum no se dan por participantes por aparecer en una plantilla. Si la identidad o participación no se acredita, queda pendiente; puede hacer falta más de una ventana para completar el ensayo.
-6. Comparar P/R/A/triples, tiros, minutos y totales con una referencia original que pueda consultarse legítimamente. Probar en una copia del navegador con los históricos originales de solo lectura, comprobar las ventanas 5/10/15/20 y la atribución, repetir el lote y después una revisión controlada para verificar que no duplica.
-7. Comprobar hashes/recuentos del historial, plantillas y directorio antes/después y los resultados originales de equipos. Solo tras superar el ensayo privado, implementar la entrega autorizada y valorar activar la programación.
+1. Acceder a [NBA Stat](https://nbastat.io/), iniciar sesión y abrir el perfil, apartado de acceso API. Crear el token conforme a la [documentación oficial](https://nbastat.io/developers/api). Se muestra una sola vez. Copiarlo directamente al secreto, sin `Bearer `, espacios añadidos ni comillas. No enviarlo al chat, subirlo como archivo o fotografiarlo.
+2. En GitHub abrir `oliver07atm/nba-tendencias` → **Settings → Secrets and variables → Actions → Secrets → New repository secret**.
+3. Nombre exacto: **`NBASTAT_API_TOKEN`**. En «Secret», pegar el token y pulsar **Add secret**. Es un secreto de Actions, no una variable, un archivo `.env` publicado ni una variable `VITE_*`. No cambiar `BALLDONTLIE_API_KEY`.
+4. Avisar de que está configurado **sin comunicar su valor**. No se ha ejecutado ni programado esta consulta al preparar el código. Guardar un secreto no dispara el workflow.
+
+### Ejecución posterior, solo tras confirmar la configuración
+
+En **Actions → NBA Stat - prueba manual 1369 (sin publicar estadísticas) → Run workflow**, escoger **main**, escribir `INSPECT_1369` y marcar la confirmación únicamente si la cuenta lleva al menos 60 minutos sin consultas y no hay otros clientes activos. El límite pertenece a la cuenta; no se controla el consumo desde otras herramientas. No habilitar logs de depuración, volcar el entorno ni ejecutar comandos de prueba con el token. No hace falta un servicio nuevo ni una clave adicional.
+
+La primera fase hace **una sola petición** a `/api/v1/games/1369/boxscore`, sin reintentos ni llamadas auxiliares. El token solo está disponible en ese paso del runner. Una respuesta correcta produce un resumen de Actions con rutas y tipos de campos, sin valores, nombres, IDs de jugadores ni estadísticas. Ese resumen de estructura puede ser público. El JSON crudo no se imprime, guarda en archivos, sube como artefacto ni se incluye en Pages. Existe solo en memoria del proceso durante la inspección. Una ejecución verde acredita recepción JSON y estructura; **no acredita aún partido correcto, marcador, participación, identidades ni calidad**. Ante fallo se muestra solo un código seguro; no el cuerpo HTTP ni el error crudo.
+
+`github-quota.mjs` mantiene la cuota en una rama separada `nbastat-probe-quota`, exclusivamente con timestamps (`version`, `attempts`, `blockedUntil`), nunca estadísticas ni credenciales. El workflow serializa ejecuciones. Cada reserva se sube **antes de HTTP**, con comparación del commit anterior para impedir carreras. Un fallo de persistencia impide la consulta; una petición fallida conserva su reserva. No borrar esta rama para reiniciar la cuota. El cliente respeta diez solicitudes por ventana móvil de 60 minutos y el bloqueo de 429/Retry-After. Un runner terminado antes de reservar no consume petición; si termina después, la reserva permanece. No hay esperas de una hora consumiendo minutos de Actions.
+
+El workflow necesita el `GITHUB_TOKEN` estándar con permiso `contents: write` (ya declarado) y permiso para crear esa rama; no pide un PAT. Si una política del repositorio impide la escritura, falla antes de consultar. No elimina protecciones. No modifica el workflow diario de BALLDONTLIE ni publica datos al escribir la rama de cuota. Esta cuota deberá compartirse con cualquier orquestador futuro, que aún no está activado.
+
+### Siguiente fase después de obtener la estructura
+
+Revisar los campos reales del resumen, implementar el decoder y efectuar otra consulta controlada para comprobar valores sin publicar el cuerpo crudo. Revisar fecha/temporada/equipos/estado y marcador 121–113, número real de registros y duplicados, DNP/participación/desconocidos, unidades de minutos, totales, tiros y cuartos disponibles. La documentación no da el esquema completo: hoy no se suponen claves para hacer esas comprobaciones.
+
+Verificar IDs internos NBA Stat contra las identidades NBA/ESPN ya contrastadas mediante perfiles, IDs y nacimiento. Cade Cunningham u otros no se dan por participantes por figurar en una plantilla. Si faltan datos o evidencia, el lote se mantiene pendiente; no inventar ceros o cuartos. Comparar P/R/A/triples con fuentes originales y probar en una copia local que la nueva actuación entra en gráficos y tendencias 5/10/15/20, conservando partidos de equipos anteriores. Repetir el lote y una corrección debe mantener IDs y no duplicar. Confirmar hashes/recuentos de los originales y aportaciones históricas de equipos.
+
+Solo después de esas comprobaciones se podrá habilitar la entrega autorizada, mostrar la atribución en las vistas que usen esos datos e integrar la cola incremental. El ensayo estructural no publica estadísticas ni cambia las 93.224 filas, las 519 fichas, las 434 correspondencias o las retiradas. La sincronización masiva sigue desactivada.
 
 ## Verificación actual
 
-`npm test` incluye once pruebas nuevas con fixtures y HTTP simulados: gates, identidades, DNP/cero/desconocido, coherencia, revisiones, históricos entre equipos, ventanas y tendencias, cuota durable, fallos/429, rutas, permisos de archivo y conflicto de pestañas. `npm run build` comprueba que la web existente sigue compilando. Las pruebas no certifican cobertura, exactitud ni permisos de datos reales NBA Stat.
+`npm test` incluye once pruebas de la infraestructura y seis adicionales del probe con fixtures y HTTP simulados: gates, identidades, DNP/cero/desconocido, coherencia, revisiones, históricos entre equipos, ventanas y tendencias, cuota durable, fallos/429, rutas, permisos de archivo y conflicto de pestañas. `npm run build` comprueba que la web existente sigue compilando. Las pruebas simuladas no certifican exactitud ni cobertura efectiva de datos reales NBA Stat; los permisos se registran según la confirmación del usuario.

@@ -1,0 +1,34 @@
+name: NBA Stat - prueba manual 1369 (sin publicar estadísticas)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Escribe INSPECT_1369 para autorizar una única consulta del esquema'
+        required: true
+        type: string
+      unused_account:
+        description: 'Confirmo que la cuenta no se ha usado durante 60 minutos y no hay otros clientes activos'
+        required: true
+        default: false
+        type: boolean
+permissions:
+  contents: write
+concurrency:
+  group: nbastat-account-quota
+  cancel-in-progress: false
+jobs:
+  inspect:
+    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'INSPECT_1369' && inputs.unused_account
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Inspeccionar solo estructura, sin guardar respuesta ni publicar datos
+        env:
+          NBASTAT_API_TOKEN: ${{ secrets.NBASTAT_API_TOKEN }}
+          CONFIRM_NBASTAT: ${{ inputs.confirmation }}
+          CONFIRM_UNUSED_ACCOUNT: ${{ inputs.unused_account }}
+        run: node scripts/probe-nbastat.mjs
