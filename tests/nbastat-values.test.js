@@ -60,3 +60,16 @@ test('Private probe uses one fixed request, shared quota; no API token in encryp
 test('Private workflow never publishes cleartext or triggers automatically; original calendar unchanged',()=>{
  const wf=readFileSync(new URL('../.github/workflows/nbastat-values.yml',import.meta.url),'utf8');assert.ok(wf.includes('workflow_dispatch:'));assert.ok(wf.includes('group: nbastat-account-quota'));assert.ok(!/schedule:|pull_request:|^  push:/m.test(wf));assert.ok(wf.includes('secrets.NBASTAT_API_TOKEN'));assert.ok(wf.includes('secrets.NBASTAT_PROBE_PASSPHRASE'));assert.ok(wf.includes('path: work/nbastat-sealed/review.sealed.json'));assert.ok(wf.includes('retention-days: 1'));assert.ok(!wf.includes('deploy-pages'));assert.equal(config.enabled,false);assert.equal(config.responseSchema,'unverified');
 });
+
+test('Recent structural probe and encrypted probe share ten rolling reservations without an hour idle',async()=>{
+ const {runProbe}=await import('../scripts/lib/nbastat/probe.mjs');
+ let now=Date.parse('2031-01-03T00:00:00Z'),state=emptyLedger(),calls=0;
+ const store={withLock:f=>f(),readLedger:async()=>structuredClone(state),writeLedger:async next=>{state=structuredClone(next);}};
+ const options={config,token:'FICTITIOUS_API_TOKEN',passphrase:pass,store,clock:()=>now,fetchImpl:async()=>{calls++;return new Response(JSON.stringify(nbaStatWireFixture().wire));}};
+ await runProbe({...options,confirmation:'INSPECT_1369'});
+ now+=1000;assert.equal((await runSealedProbe({...options,confirmation:'VALIDATE_1369'})).status,'sealed-review');assert.equal(calls,2);assert.equal(state.attempts.length,2);
+ for(let i=2;i<10;i++)await runProbe({...options,confirmation:'INSPECT_1369'});
+ const before=structuredClone(state),deferred=await runSealedProbe({...options,confirmation:'VALIDATE_1369'});
+ assert.equal(deferred.status,'deferred');assert.equal(calls,10);assert.deepEqual(state,before);assert.equal(deferred.notBefore,Date.parse('2031-01-03T00:00:00Z')+HOUR);
+ now=deferred.notBefore;assert.equal((await runSealedProbe({...options,confirmation:'VALIDATE_1369'})).status,'sealed-review');assert.equal(calls,11);assert.equal(state.attempts.length,10);
+});

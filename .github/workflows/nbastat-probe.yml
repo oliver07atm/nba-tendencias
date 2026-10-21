@@ -6,8 +6,8 @@ on:
         description: 'Escribe INSPECT_1369 para autorizar una única consulta del esquema'
         required: true
         type: string
-      unused_account:
-        description: 'Confirmo que la cuenta no se ha usado durante 60 minutos y no hay otros clientes activos'
+      no_external_clients:
+        description: 'Confirmo que no hay otros clientes externos activos usando la misma cuenta'
         required: true
         default: false
         type: boolean
@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   inspect:
-    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'INSPECT_1369' && inputs.unused_account
+    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'INSPECT_1369' && inputs.no_external_clients
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -30,5 +30,5 @@ jobs:
         env:
           NBASTAT_API_TOKEN: ${{ secrets.NBASTAT_API_TOKEN }}
           CONFIRM_NBASTAT: ${{ inputs.confirmation }}
-          CONFIRM_UNUSED_ACCOUNT: ${{ inputs.unused_account }}
+          CONFIRM_NO_EXTERNAL_CLIENTS: ${{ inputs.no_external_clients }}
         run: node scripts/probe-nbastat.mjs

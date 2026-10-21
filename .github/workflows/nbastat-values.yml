@@ -6,8 +6,8 @@ on:
         description: 'Escribe VALIDATE_1369 para recuperar una muestra cifrada, sin publicarla en claro'
         required: true
         type: string
-      unused_account:
-        description: 'Cuenta sin uso durante 60 minutos y sin otros clientes activos'
+      no_external_clients:
+        description: 'Confirmo que no hay otros clientes externos activos usando la misma cuenta'
         required: true
         type: boolean
         default: false
@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   review:
-    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'VALIDATE_1369' && inputs.unused_account
+    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'VALIDATE_1369' && inputs.no_external_clients
     timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
@@ -31,7 +31,7 @@ jobs:
           NBASTAT_API_TOKEN: ${{ secrets.NBASTAT_API_TOKEN }}
           NBASTAT_PROBE_PASSPHRASE: ${{ secrets.NBASTAT_PROBE_PASSPHRASE }}
           CONFIRM_NBASTAT: ${{ inputs.confirmation }}
-          CONFIRM_UNUSED_ACCOUNT: ${{ inputs.unused_account }}
+          CONFIRM_NO_EXTERNAL_CLIENTS: ${{ inputs.no_external_clients }}
         run: node scripts/probe-nbastat-values.mjs
       - uses: actions/upload-artifact@v4
         with:

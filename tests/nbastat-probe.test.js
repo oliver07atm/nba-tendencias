@@ -46,3 +46,15 @@ test('Workflow is dispatch-only, main-only, no artifacts/Pages/browser; secret i
  const cli=readFileSync(new URL('../scripts/probe-nbastat.mjs',import.meta.url),'utf8');assert.ok(cli.includes("GITHUB_EVENT_NAME!=='workflow_dispatch'"));assert.ok(!cli.includes('console.log(result)'));assert.ok(!cli.includes('JSON.stringify(error)'));
  const pages=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');assert.ok(!pages.toLowerCase().includes('nbastat'));
 });
+
+test('Both manual workflows confirm external-client exclusivity without an inactivity requirement',()=>{
+ for(const [workflow,script] of [['nbastat-probe.yml','probe-nbastat.mjs'],['nbastat-values.yml','probe-nbastat-values.mjs']]){
+  const yaml=readFileSync(new URL('../.github/workflows/'+workflow,import.meta.url),'utf8');
+  const cli=readFileSync(new URL('../scripts/'+script,import.meta.url),'utf8');
+  assert.ok(yaml.includes('no_external_clients:'));assert.ok(yaml.includes('inputs.no_external_clients'));assert.ok(yaml.includes('CONFIRM_NO_EXTERNAL_CLIENTS: ${{ inputs.no_external_clients }}'));
+  assert.ok(cli.includes("process.env.CONFIRM_NO_EXTERNAL_CLIENTS!=='true'"));
+  assert.ok(!/unused_account|CONFIRM_UNUSED_ACCOUNT|60 minutos|inactividad/.test(yaml+cli));
+  assert.ok(yaml.includes('group: nbastat-account-quota'));assert.ok(yaml.includes('cancel-in-progress: false'));
+  assert.ok(cli.includes('store:githubQuotaStore()'));
+ }
+});

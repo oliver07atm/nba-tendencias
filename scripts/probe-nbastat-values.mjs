@@ -3,7 +3,7 @@ import {runSealedProbe} from './lib/nbastat/sealed-probe.mjs';
 import {githubQuotaStore} from './lib/nbastat/github-quota.mjs';
 import {NbaStatError} from './lib/nbastat/client.mjs';
 try{
- if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_EVENT_NAME!=='workflow_dispatch'||process.env.GITHUB_REF!=='refs/heads/main'||process.env.CONFIRM_NBASTAT!=='VALIDATE_1369'||process.env.CONFIRM_UNUSED_ACCOUNT!=='true')throw new NbaStatError('MANUAL_MAIN_PROBE_ONLY');
+ if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_EVENT_NAME!=='workflow_dispatch'||process.env.GITHUB_REF!=='refs/heads/main'||process.env.CONFIRM_NBASTAT!=='VALIDATE_1369'||process.env.CONFIRM_NO_EXTERNAL_CLIENTS!=='true')throw new NbaStatError('MANUAL_MAIN_PROBE_ONLY');
  const config=JSON.parse(await readFile(new URL('../nbastat-source.json',import.meta.url),'utf8'));
  const result=await runSealedProbe({config,token:process.env.NBASTAT_API_TOKEN,passphrase:process.env.NBASTAT_PROBE_PASSPHRASE,confirmation:process.env.CONFIRM_NBASTAT,store:githubQuotaStore()});
  if(result.status==='deferred'){console.log('Aplazado por cuota; no hubo consulta.');if(process.env.GITHUB_STEP_SUMMARY)await appendFile(process.env.GITHUB_STEP_SUMMARY,'Prueba aplazada hasta '+new Date(result.notBefore).toISOString()+'.\n');}
