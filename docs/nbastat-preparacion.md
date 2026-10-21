@@ -10,7 +10,7 @@ La documentación consultada no muestra un esquema completo de los campos del bo
 
 El usuario declara una autorización por correo para consultas automáticas, almacenamiento privado, análisis y presentación personal no comercial con atribución. Se registra como `reported-by-user`; no se ha inspeccionado ni publicado ese correo. Las [condiciones públicas](https://nbastat.io/terms), especialmente §§4 y 8, mantienen restricciones y no conceden por el mero acceso API derechos generales de redistribución. Quedan pendientes la aclaración de JSON públicos, 2026-27 y cualquier permiso de origen necesario para el uso concreto. Citar la fuente no sustituye esos permisos.
 
-`nbastat-source.json` está desactivado. El cliente exige confirmación explícita de los permisos pendientes antes de cualquier llamada. El modo futuro `private-inspection` permitirá recoger una primera muestra privada para revisar su esquema; el modo de ingestión exigirá además un esquema verificado. **La configuración actual no habilita ninguno**. No hay entradas ejecutables ni programaciones nuevas.
+`nbastat-source.json` está desactivado. El cliente exige resolver explícitamente los permisos pendientes antes de cualquier llamada. Si se deniega JSON público pero se confirma el uso privado y la cobertura, solo será viable el canal privado; esa denegación no invalida por sí sola una prueba privada autorizada. El modo futuro `private-inspection` permitirá recoger una primera muestra privada para revisar su esquema; el modo de ingestión exigirá además un esquema verificado. **La configuración actual no habilita ninguno**. No hay entradas ejecutables ni programaciones nuevas.
 
 ## Archivos preparados
 

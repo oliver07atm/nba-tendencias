@@ -3,7 +3,7 @@ export const NBASTAT_ORIGIN='https://nbastat.io';
 export const HOUR=60*60*1000;
 export class NbaStatError extends Error{constructor(code){super(code);this.code=code;}}
 export function assertNbaStatReady(config,purpose='ingestion'){
- if(!['ingestion','private-inspection'].includes(purpose)||config?.enabled!==true||config.personalPermission!=='confirmed'||config.publicJsonPermission!=='confirmed'||config.season2026Coverage!=='confirmed'||purpose!=='private-inspection'&&config.responseSchema!=='verified'||config.mode!=='private-only')throw new NbaStatError('INTEGRATION_DISABLED_PENDING_REVIEW');
+ if(!['ingestion','private-inspection'].includes(purpose)||config?.enabled!==true||config.personalPermission!=='confirmed'||!['confirmed','denied'].includes(config.publicJsonPermission)||config.season2026Coverage!=='confirmed'||purpose!=='private-inspection'&&config.responseSchema!=='verified'||config.mode!=='private-only')throw new NbaStatError('INTEGRATION_DISABLED_PENDING_REVIEW');
 }
 export function emptyLedger(){return {version:1,attempts:[],blockedUntil:0};}
 function checkedLedger(value){
