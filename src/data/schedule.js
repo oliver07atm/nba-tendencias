@@ -42,6 +42,7 @@ export function validateSchedule(input){
  const ids=new Set();for(const g of input.games){
   if(typeof g.id!=='string'||!/^bdl:game:\d+$/.test(g.id)||ids.has(g.id)||!NBA_TEAMS.some(t=>t.id===g.home)||!NBA_TEAMS.some(t=>t.id===g.away)||g.home===g.away||!validDay(g.day)||g.date!==null&&(!isoDate(g.date)||canaryDay(g.date)!==g.day)||!Object.hasOwn(STATUS_LABELS,g.status))throw Error('Partido de calendario inválido');
   ids.add(g.id);for(const k of ['homeScore','awayScore'])if(g[k]!==null&&(!Number.isInteger(g[k])||g[k]<0))throw Error('Marcador inválido');
+  if(g.observedAt!==undefined&&!isoDate(g.observedAt))throw Error('Fecha de consulta del partido inválida');
  }
  return {...input,games:sortGames(input.games)};
 }

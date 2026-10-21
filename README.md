@@ -119,6 +119,8 @@ Se han revisado Highlightly NBA API, TheSportsDB y API-NBA. **Ninguna está apro
 
 Esas alternativas no están conectadas. BALLDONTLIE se conecta únicamente para el calendario gratuito; la demostración y la desactivación de estadísticas automáticas se conservan.
 
+**Datos → Actualización de estadísticas** muestra ahora las fechas del historial por separado del calendario, los finales sin actuaciones localizadas y las discrepancias detectables. Los gráficos y las tendencias avisan de que no se incorporan actuaciones automáticamente. Se conservan los finales públicos descargados de la temporada para revisar el desfase al volver tras varios días; no se descargan box scores ni se escribe en los históricos. [Auditoría actualizada, fuentes, límites y diseño pendiente](docs/actualizacion-estadisticas.md).
+
 ## Historial personal en el navegador
 
 En **Datos → Importar estadísticas NBA desde CSV**, selecciona jugadores, equipos y calendario de la misma temporada y pulsa **Convertir e importar temporada**. Repite el proceso para añadir temporadas. El historial se identifica como de procedencia declarada, pendiente de verificación.

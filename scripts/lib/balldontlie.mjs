@@ -27,7 +27,7 @@ export async function fetchCalendar({apiKey,now=new Date(),fetchImpl=fetch,wait=
  for(let page=0;page<20;page++){
   const url=new URL('https://api.balldontlie.io/v1/games');url.searchParams.set('per_page','100');url.searchParams.set('start_date',start);url.searchParams.set('end_date',end);if(cursor!==null)url.searchParams.set('cursor',String(cursor));
   const body=await request(url);
-  try{for(const raw of body.data){const g=normalizeGame(raw);games.set(g.id,g);}}catch{throw new CalendarError('INVALID_GAME');}
+  try{for(const raw of body.data){const g={...normalizeGame(raw),observedAt:new Date(now).toISOString()};games.set(g.id,g);}}catch{throw new CalendarError('INVALID_GAME');}
   const next=body.meta.next_cursor;
   if(next==null){
    const updatedAt=new Date(now).toISOString();
@@ -40,7 +40,18 @@ export async function fetchCalendar({apiKey,now=new Date(),fetchImpl=fetch,wait=
  throw new CalendarError('PAGE_LIMIT');
 }
 export async function refreshCalendar({previous=null,...options}){
- try{return {snapshot:await fetchCalendar(options),ok:true};}
+ try{
+  const fresh=await fetchCalendar(options);
+  // Retain public final scores for coverage diagnostics while browsers are closed.
+  // This is NOT a player-stat feed. Requeried IDs always replace archived states.
+  const now=new Date(options.now||Date.now()),year=now.getUTCFullYear()-(now.getUTCMonth()<6?1:0),seasonStart=`${year}-07-01`;
+  const games=new Map();
+  for(const g of previous?validateSchedule(previous).games:[])if(g.status==='final'&&g.day>=seasonStart&&g.day<fresh.meta.coverage.from)games.set(g.id,{...g,observedAt:g.observedAt||previous.meta.updatedAt});
+  const archived=games.size;
+  for(const g of fresh.games)games.set(g.id,g);
+  const snapshot=validateSchedule({...fresh,games:[...games.values()],meta:{...fresh.meta,gameCount:games.size,archive:{seasonStart,retainedFinals:archived,notice:'Finales conservados desde las descargas disponibles; no es un histórico completo ni incluye actuaciones.'}}});
+  return {snapshot,ok:true};
+ }
  catch(error){
   const safeCode=error instanceof CalendarError?error.code:'INVALID_RESPONSE';
   const base=previous?validateSchedule(previous):{meta:{source:'BALLDONTLIE',updatedAt:null},games:[]};
