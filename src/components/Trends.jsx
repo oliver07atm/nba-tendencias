@@ -1,3 +1,4 @@
+import SearchableSelect from './SearchableSelect.jsx';
 import React,{useMemo,useState} from 'react';
 import {detectTrends,playerStats,teamStats,oddsMetrics,canary} from '../engine.js';
 import {visiblePlayerOptions} from '../data/player-directory.js';
@@ -26,7 +27,7 @@ export default function Trends({data,records,schedule,rosters,retired,mode,now,c
  const matches=schedule,match=matches.find(g=>g.id===matchId);
  const all=useMemo(()=>detectTrends({records:mode==='real'&&data.meta.mode==='demo'?[]:records,schedule},limit==='custom'?custom:limit,{currentTeams,excludedPlayers:retired,stats:stat==='all'?null:[stat],kind,venue,team,player,matchId,competition,opponent,seasons,minPercent}),[records,schedule,mode,data.meta.mode,currentTeams,retired,stat,kind,venue,team,player,matchId,competition,opponent,get('seasons'),limit,custom,minPercent]);
  const trends=useMemo(()=>all.filter(t=>t.percent>=minPercent&&(t.entity+' '+t.team+' '+(playerStats[t.stat]||teamStats[t.stat])).toLocaleLowerCase('es').includes(query.toLocaleLowerCase('es'))).sort((a,b)=>sort==='stat'?a.stat.localeCompare(b.stat)||b.quality-a.quality:sort==='percent'?b.percent-a.percent||b.quality-a.quality:sort==='total'?b.total-a.total||b.quality-a.quality:b.quality-a.quality||b.total-a.total||a.entity.localeCompare(b.entity)),[all,minPercent,query,sort]);
- const choose=(label,value,key,options)=><label className="field"><span>{label}</span><select aria-label={label} value={value} onChange={e=>change(key,e.target.value)}>{options.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
+ const choose=(label,value,key,options)=>{const Control=key==='tPlayer'?SearchableSelect:'select';return <label className="field"><span>{label}</span><Control aria-label={label} value={value} onChange={e=>change(key,e.target.value)}>{options.map(([v,l])=><option value={v} key={v}>{l}</option>)}</Control></label>;};
  const statOptions=kind==='team'?teamStats:kind==='player'?playerStats:{...playerStats,...teamStats};
  const warning=mode==='real'?calendarWarning(calendar,calendarError,now):'DEMOSTRACIÓN · encuentros y estadísticas sintéticos.';
  return <>

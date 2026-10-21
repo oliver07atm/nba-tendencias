@@ -84,12 +84,36 @@ test('Cached batch revalidation is network-free and no workflow or application i
  const pages=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8'),main=readFileSync(new URL('../src/main.jsx',import.meta.url),'utf8'),pkg=JSON.parse(readFileSync(new URL('../package.json',import.meta.url)));assert.ok(!/sync-worker|sync-queue|sync-store/.test(pages+main));assert.ok(!Object.keys(pkg.scripts).some(k=>/sync.*nba|nba.*sync/i.test(k)));
 });
 
-test('Future Actions adapter persists ciphertext only, survives new runners, fails closed on missing/corrupt state and rejects CAS races',async()=>{
- const {githubSyncStore}=await import('../scripts/lib/nbastat/github-sync-store.mjs');let parent=null,blob=null,sealed=null;const sha='a'.repeat(40);let race=false;const history=[];
- const git=(args,input)=>{history.push(args);if(args[0]==='ls-remote')return parent?parent+'\trefs/heads/nbastat-sync-private-2030\n':'';if(args[0]==='fetch')return '';if(args[0]==='show')return sealed;if(args[0]==='hash-object'){blob=input;assert.ok(!input.includes('FICTICIO'));assert.ok(!input.includes('990000001'));return sha;}if(args[0]==='mktree'||args.includes('commit-tree'))return sha;if(args[0]==='push'){if(race)throw Error('SIMULATED_COMPARE_AND_SWAP_FAILURE');parent=sha;sealed=blob;return '';}throw Error('Unexpected git operation');};
- const missing=githubSyncStore({year:2030,passphrase:pass,git});await assert.rejects(missing.withLock(()=>{}),/CHECKPOINT_MISSING/);
- const init=githubSyncStore({year:2030,passphrase:pass,allowInitialize:true,git}),f=cachedFixture();await init.withLock(()=>init.write(f.state,0));
- const restarted=githubSyncStore({year:2030,passphrase:pass,git});await restarted.withLock(async()=>{const state=await restarted.read();assert.equal(state.revision,1);assert.equal(state.jobs[key].phase,'downloaded');assert.equal(state.jobs[key].download.body.data.players.length,3);race=true;await assert.rejects(restarted.write(state,1),/COMPARE_AND_SWAP/);race=false;});
- const stored=openSyncCheckpoint(JSON.parse(sealed),pass);assert.equal(stored.revision,1);assert.ok(history.some(a=>a[0]==='push'&&a.includes('--force-with-lease=refs/heads/nbastat-sync-private-2030:')));
- await assert.rejects(githubSyncStore({year:2030,passphrase:pass+'BAD',git}).withLock(()=>{}),/CHECKPOINT_UNREADABLE/);
+test('Retired public-origin adapter refuses every configuration before Git or callback execution',async()=>{
+ const {githubSyncStore}=await import('../scripts/lib/nbastat/github-sync-store.mjs');
+ let calls=0;const git=()=>{calls++;throw Error('MUST_NOT_RUN');};
+ for(const options of [undefined,{}, {passphrase:pass,year:2030,allowInitialize:true,git}, {repository:'owner/private',private:true,git}]){
+  assert.throws(()=>githubSyncStore(options),/PUBLIC_REPOSITORY_CHECKPOINT_ADAPTER_DISABLED/);
+ }
+ assert.equal(calls,0);
+});
+test('Six-week offline recovery retains finalized, blocked and omitted jobs without duplicates or HTTP',async()=>{
+ await mkdir('work',{recursive:true});const dir=await mkdtemp(resolve('work/nbastat-sync-weeks-'));
+ try{
+  const f=cachedFixture(),blocked=validateSyncDownload(f.state,key,{review:f.review,mappings:{...f.mapping,players:[]}});
+  const old=linkedFixture();old.calendar.games[0].id='bdl:game:880002';old.link.calendarId='bdl:game:880002';old.link.sourceId='990000002';old.link.evidenceUrl='https://nbastat.io/api/v1/games/990000002';
+  let state=reconcileSyncCalendar(blocked,old.calendar);state=linkSyncGame(state,old.link.calendarId,old.link);
+  const store=privateSyncStore(dir,2030);await store.withLock(()=>store.write(state,0));
+  // New process/store instance, six weeks later, a partial calendar omits both jobs.
+  const restarted=privateSyncStore(dir,2030),later='2031-02-14T01:00:00Z';
+  await restarted.withLock(async()=>{
+   const recovered=await restarted.read();
+   const merged=reconcileSyncCalendar(recovered,{meta:{source:'BALLDONTLIE',updatedAt:later},games:[]});
+   assert.equal(Object.keys(merged.jobs).length,2);assert.equal(merged.jobs[key].phase,'blocked-identities');
+   assert.deepEqual(dueSyncDownloads(merged,later),['bdl:game:880002']);
+   const sealed=sealSyncCheckpoint(merged,pass),restored=openSyncCheckpoint(sealed,pass);
+   const ready=validateSyncDownload(restored,key,{review:f.review,mappings:f.mapping});
+   const applied=incorporateSyncGame(ready,key);
+   const repeated=incorporateSyncGame(validateSyncDownload(applied,key,{review:f.review,mappings:f.mapping}),key);
+   assert.equal(Object.keys(repeated.jobs).length,2);
+   assert.equal(repeated.updates.games['nbastat:game:990000001'].records.length,2);
+   assert.deepEqual(repeated.updates,applied.updates);
+   assert.equal(recovered.jobs[key].phase,'blocked-identities');
+  });
+ }finally{await rm(dir,{recursive:true,force:true});}
 });

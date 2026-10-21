@@ -158,3 +158,7 @@ NBA Stat admite ahora la [importación privada del caso 1369 desde Datos](docs/n
 Las [identidades NBA Stat admiten evidencias alternativas al nacimiento](docs/nbastat-identidades-alternativas.md): referencia explícita NBA/ESPN o correspondencia confirmada por el proveedor. Hay una inspección cifrada manual del perfil 1548 y una vía por lotes, ambas inactivas hasta ejecución manual. No se inventan fechas ni se enlaza por nombre.
 
 Se ha preparado una [cola incremental NBA Stat desactivada](docs/nbastat-cola-inactiva.md), alimentada por el calendario completo BALLDONTLIE, con estados, caché privada, bloqueos de identidad, revisiones, cuota compartida y checkpoints cifrados. Es infraestructura interna sin nuevo workflow ni consultas reales; faltan los enlaces verificados y conectar/probar la persistencia cifrada entre runners antes de activarla.
+
+La [auditoría de privacidad de la persistencia NBA Stat](docs/nbastat-persistencia-auditoria.md) retira el adaptador de checkpoints sobre el repositorio público. La alternativa privada no está desplegada y la sincronización sigue desactivada.
+
+[Guía del buscador de jugadores y sus pruebas](docs/buscador-jugadores.md).
