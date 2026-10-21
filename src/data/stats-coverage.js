@@ -1,8 +1,9 @@
 import {canaryDay} from './schedule.js';
 import {canonicalTeam} from './nba-teams.js';
 
-export const STATS_UPDATE_STATUS={enabled:false,reviewedAt:'2026-10-21',reason:'Sin fuente gratuita con permisos y cobertura verificados para este uso.'};
+export const STATS_UPDATE_STATUS={enabled:false,reviewedAt:'2026-10-21',reason:'NBA Stat autorizado según confirmación del usuario; importación privada en pruebas. Sincronización automática pendiente de validar cobertura, identidades y entrega incremental.'};
 export const STATS_SOURCES=[
+ {name:'NBA Stat',url:'https://nbastat.io/developers/api',result:'Permiso específico comunicado por el usuario. Importación privada del caso 1369 con revisión declarada e identidades contrastadas; automatización desactivada. Sin cuartos ni box score completo de equipos.'},
  {name:'BALLDONTLIE',url:'https://docs.balldontlie.io/',result:'Calendario conectado. Game Player Stats y Box Scores no están incluidos en el plan gratuito.'},
  {name:'API-NBA / API-SPORTS',url:'https://api-sports.io/terms',result:'100 consultas/día anunciadas. Actuaciones y cuartos documentados; permisos de publicación y uso relacionado con apuestas pendientes. Sin conexión ni clave configurada.'},
  {name:'Highlightly',url:'https://highlightly.net/terms/',result:'Box scores documentados. La sección 7 restringe el uso para apoyar operaciones de apuestas; no se presume una excepción para este proyecto.'},
@@ -13,7 +14,7 @@ export const STATS_SOURCES=[
 const matchup=(home,away,day)=>`${canonicalTeam(home)}|${canonicalTeam(away)}|${day}`;
 function sourceGameKey(r){
  // Never equate a bare numeric ESPN game ID with a BALLDONTLIE ID.
- return /^((?:espn|nba|bdl):game:[^:]+):(?:player|team):/.exec(r.id||'')?.[1]||null;
+ return /^((?:espn|nba|bdl|nbastat):game:[^:]+):(?:player|team):/.exec(r.id||'')?.[1]||null;
 }
 
 // Read-only diagnostics, not an identity join or a completeness certificate.

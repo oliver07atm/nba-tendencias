@@ -1,11 +1,12 @@
-// Prepared private overlay storage. Not loaded by the app and never stores tokens.
-import {emptyNbaStatUpdates,applyNbaStatGame} from './updates.js';
+// Separate private overlay storage. Never writes the original history or credentials.
+import {emptyNbaStatUpdates,applyNbaStatGame,validateNbaStatMappings} from './updates.js';
 const DATABASE='nba-tendencias-nbastat-private',STORE='state';
-export const emptyNbaStatSnapshot=()=>({version:1,revision:0,updates:emptyNbaStatUpdates(),queue:{},cursor:null});
+export const emptyNbaStatSnapshot=()=>({version:1,revision:0,updates:emptyNbaStatUpdates(),queue:{},cursor:null,mappings:{version:1,players:[],teams:[]}});
 function containsCredentials(value,seen=new WeakSet()){if(!value||typeof value!=='object'||seen.has(value))return false;seen.add(value);return Object.entries(value).some(([key,item])=>/token|authorization|credential|password|secret|api.?key/i.test(key)||containsCredentials(item,seen));}
 function validate(snapshot){
  if(containsCredentials(snapshot))throw Error('No se guardan credenciales en IndexedDB');
- if(!snapshot||Object.keys(snapshot).some(k=>!['version','revision','updates','queue','cursor'].includes(k))||snapshot?.version!==1||!Number.isSafeInteger(snapshot.revision)||snapshot.revision<0||!snapshot.queue||typeof snapshot.queue!=='object'||Array.isArray(snapshot.queue)||snapshot.updates?.source!=='NBA Stat'||!snapshot.updates.games)throw Error('Estado privado NBA Stat inválido');
+ if(!snapshot||Object.keys(snapshot).some(k=>!['version','revision','updates','queue','cursor','mappings'].includes(k))||snapshot?.version!==1||!Number.isSafeInteger(snapshot.revision)||snapshot.revision<0||!snapshot.queue||typeof snapshot.queue!=='object'||Array.isArray(snapshot.queue)||snapshot.updates?.source!=='NBA Stat'||!snapshot.updates.games)throw Error('Estado privado NBA Stat inválido');
+ if(snapshot.mappings)validateNbaStatMappings(snapshot.mappings);
  for(const b of Object.values(snapshot.updates.games))applyNbaStatGame(emptyNbaStatUpdates(),b);
  return snapshot;
 }

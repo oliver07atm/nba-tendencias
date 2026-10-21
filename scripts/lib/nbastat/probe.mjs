@@ -1,5 +1,6 @@
 import {createNbaStatClient,NbaStatError} from './client.mjs';
-export const ATTRIBUTION='Statistics sourced from NBA Stat and published with permission. NBA Stat is not affiliated with or endorsed by the NBA.';
+export {NBASTAT_ATTRIBUTION as ATTRIBUTION} from '../../../src/data/nbastat/provenance.js';
+import {NBASTAT_ATTRIBUTION as ATTRIBUTION} from '../../../src/data/nbastat/provenance.js';
 // Values are NEVER included: this is structural discovery, not a box-score decoder.
 export function describeStructure(body,token=''){
  const fields=new Map();let visited=0,truncated=false;
