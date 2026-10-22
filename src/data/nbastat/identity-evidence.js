@@ -11,8 +11,10 @@ export function referencedCanonicalId(value,namespace){
   return (namespace==='nba'?/^\/player\/([1-9]\d*)(?:\/|$)/:/^\/nba\/player\/(?:[a-z]+\/)?_\/id\/([1-9]\d*)(?:\/|$)/).exec(u.pathname)?.[1]||null;
  }catch{return null;}
 }
+export const normalizeIdentityName=value=>String(value||'').normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\s+/g,' ');
 export function validNbaStatIdentityEvidence(p){
  const e=p.identityEvidence;
+ if(e?.method==='profile-attributes')return Object.keys(e).every(k=>['method','sourceId','canonicalKey','sourceName','canonicalName','birthDate','sourceReference','idPointer','namePointer','birthPointer','canonicalReference','fieldsReviewed','synthetic'].includes(k))&&e.sourceId===p.sourceId&&e.canonicalKey===p.key&&e.birthDate===p.birthDate&&p.sourceBirthDate===p.birthDate&&e.fieldsReviewed===true&&!!normalizeIdentityName(e.sourceName)&&normalizeIdentityName(e.sourceName)===normalizeIdentityName(e.canonicalName)&&/^private-sha256:[a-f0-9]{64}$/.test(e.sourceReference||'')&&[e.idPointer,e.namePointer,e.birthPointer].every(pointer)&&new Set([e.idPointer,e.namePointer,e.birthPointer]).size===3&&e.canonicalReference===p.canonicalUrl;
  if(!e)return p.sourceBirthDate===p.birthDate; // Existing reviewed mappings remain compatible.
  if(p.sourceBirthDate!=null||e.sourceId!==p.sourceId||e.canonicalKey!==p.key)return false;
  if(e.method==='explicit-external-id')return Object.keys(e).every(k=>['method','sourceId','canonicalKey','fieldPath','value','namespace','referenceUrl'].includes(k))&&pointer(e.fieldPath)&&referencedCanonicalId(e.value,e.namespace)===p.key.split(':').at(-1)&&e.namespace===p.key.split(':')[0]&&reference(e.referenceUrl)&&['/api/v1/players','/api/v1/players/'+p.sourceId].includes(new URL(e.referenceUrl).pathname);

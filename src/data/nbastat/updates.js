@@ -23,6 +23,7 @@ function stats(value){if(!value||metrics.some(k=>typeof value[k]!=='number'||!Nu
 // No network access, no IndexedDB writes, no changes to rosters/status/identities.
 export function prepareNbaStatGame(contract,mapping,{allowPartialIdentities=false}={}){
  validateNbaStatMappings(mapping);
+ if(contract?.synthetic!==true&&mapping.players.some(p=>p.identityEvidence?.synthetic===true&&contract?.players?.some(row=>row.sourceId===p.sourceId&&row.played===true)))throw Error('Las identidades de pruebas ficticias no pueden validar actuaciones reales.');
  if(contract?.contract!=='nba-tendencias-boxscore-v1'||!id(contract.sourceGameId)||!iso(contract.receivedAt)||!iso(contract.game?.date)||!/^\d{4}-\d{2}$/.test(contract.game?.season||'')||!Array.isArray(contract.players))throw Error('Contrato interno de box score inválido');
  const g=contract.game,sourceGame='nbastat:game:'+contract.sourceGameId,source=contract.synthetic===true?'DEMOSTRACIÓN FICTICIA · contrato propuesto para NBA Stat; no son datos del proveedor':'NBA Stat · https://nbastat.io';
  if(g.status!=='final'||contract.complete!==true)return {ready:false,reason:'GAME_NOT_COMPLETE',sourceGame};

@@ -48,7 +48,7 @@ Formato **ilustrativo, no evidencia real**, para guardar privadamente como JSON.
 
 ## Reutilización y recuperación
 
-El módulo puro `game-links.js` es compartido con el recolector privado. `inspectGameLinkBatch` compara múltiples revisiones locales reutilizando evidencias de equipos y semántica, y detecta conflictos de IDs en ambos sentidos. Solo propone candidatos, sin aprobaciones automáticas. Cuando el proveedor entregue un índice/correspondencias explícitas se podrá alimentar este mismo límite de validación con lotes; no se ha supuesto ni consultado ningún endpoint nuevo.
+El módulo puro `game-links.js` es compartido con el recolector privado. `inspectGameLinkBatch` compara múltiples revisiones locales reutilizando evidencias de equipos y semántica, y detecta conflictos de IDs en ambos sentidos. Solo propone candidatos, sin aprobaciones automáticas. Un índice privado de partidos con campos realmente observados puede alimentar este mismo límite de validación por lotes; no se espera una tabla oficial de equivalencias de jugadores. `inspectGameReferenceBatch` y el ciclo privado ya conectan esos candidatos con la cola; no se ha supuesto ni consultado ningún endpoint nuevo.
 
 El navegador guarda únicamente los enlaces en una base nueva `nba-tendencias-game-links`. No abre las bases históricas, plantillas, identidades ni estadísticas NBA Stat. Las transacciones rechazan conflictos de IDs incluso entre pestañas. El archivo privado original permanece solo en memoria del importador.
 

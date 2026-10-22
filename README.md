@@ -164,3 +164,5 @@ La [auditoría de privacidad de la persistencia NBA Stat](docs/nbastat-persisten
 [Guía del buscador de jugadores y sus pruebas](docs/buscador-jugadores.md).
 
 La [prueba integral de entrega ficticia](docs/prueba-entrega-ficticia.md) comprueba el paquete local del recolector privado en el motor y los gráficos reales de localhost. No añade un consumidor de datos en producción ni publica los fixtures como estadísticas. El receptor exige modo de prueba explícito.
+
+Las propuestas NBA Stat → NBA/ESPN y la revisión por lotes están en Datos. [Guía del motor y preparación del recolector](docs/nbastat-identity-automation.md). Nombre/equipo sin nacimiento u otra evidencia independiente suficiente no verifican una identidad; no se presuponen disponibles los nacimientos anunciados.

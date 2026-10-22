@@ -71,7 +71,7 @@ La propuesta sustituta y sus requisitos están en [la auditoría de persistencia
 
 ## Qué falta antes de activar 2026-27
 
-1. Recibir y verificar las correspondencias NBA Stat → NBA/ESPN y los enlaces entre partidos BDL/NBA Stat. El calendario ya alimenta la cola, pero no proporciona por sí solo IDs de partidos del otro proveedor. La búsqueda/correspondencia automática de juegos aún debe implementarse y validarse; los candidatos ambiguos no se aceptarán automáticamente.
+1. Construir y verificar nuestra tabla NBA Stat → NBA/ESPN con el motor propio por lotes; el proveedor ha descartado ofrecerla. Verificar también los enlaces entre partidos BDL/NBA Stat. El calendario ya alimenta la cola, pero no proporciona por sí solo IDs de partidos del otro proveedor. La comparación de índices privados por lotes está preparada y conectada a la cola, sin consultas ni activación. Los candidatos ambiguos no se aceptan automáticamente. Véase [la preparación actual](nbastat-identity-automation.md).
 2. Verificar los campos y semánticas del box score para los tipos de partido que vayamos a procesar, y revisar sus perfiles de validación. La única revisión comunicada del 1369 no constituye una regla universal.
 3. Implementar y conectar persistencia en un repositorio privado separado entre ejecuciones de Actions; probar el nuevo adaptador en ese entorno y la recuperación de checkpoints, conflictos y disponibilidad tras ausencias largas.
 4. Añadir el orquestador operativo, con pasadas cortas, recuperación de fechas pendientes y comprobaciones posteriores a finales para correcciones. Solo entonces habilitar un workflow: **no se ha añadido ahora ninguna programación**.

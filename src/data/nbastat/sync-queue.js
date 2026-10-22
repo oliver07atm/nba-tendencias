@@ -1,3 +1,4 @@
+import {validateCorrespondenceRegistry} from './correspondence-registry.js';
 // Pure, private synchronization state machine. No HTTP, timers, browser writes or publication.
 import {validateSchedule,canaryDay} from '../schedule.js';
 import {decodeNbaStatResponse} from './decoder.js';
@@ -12,7 +13,8 @@ export function emptySyncState(year=2026){if(!Number.isInteger(year)||year<1946|
 export function validateSyncState(s){
  rejectCredentials(s);
  if(s?.version!==1||!Number.isSafeInteger(s.revision)||s.revision<0||!Number.isInteger(s.year)||s.year<1946||s.year>9998||s.delivery!=='not-published'||!s.jobs||Array.isArray(s.jobs)||s.updates?.source!=='NBA Stat'||s.calendarUpdatedAt!==null&&!iso(s.calendarUpdatedAt))throw Error('Checkpoint privado de cola inválido');
- if(Object.keys(s).some(k=>!['version','revision','year','calendarUpdatedAt','jobs','updates','delivery'].includes(k)))throw Error('Campos de checkpoint desconocidos');
+ if(Object.keys(s).some(k=>!['version','revision','year','calendarUpdatedAt','jobs','updates','delivery','correspondences'].includes(k)))throw Error('Campos de checkpoint desconocidos');
+ if(s.correspondences)validateCorrespondenceRegistry(s.correspondences);
  const linked=new Set();
  for(const [key,j]of Object.entries(s.jobs)){
   if(!calendarId(key)||j.calendar?.id!==key||!SYNC_PHASES.includes(j.phase)||!iso(j.notBefore)||!Number.isSafeInteger(j.failures)||j.failures<0||typeof j.needsDownload!=='boolean')throw Error('Tarea privada inválida');

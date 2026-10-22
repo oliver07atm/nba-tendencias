@@ -1,5 +1,7 @@
 # NBA Stat: comprobar identidades sin inventar nacimientos
 
+> Actualización 22/10/2026: NBA Stat ha confirmado que no ofrece ni prevé ofrecer cruces NBA. Los métodos antiguos se conservan para evidencias ya verificadas; no se debe esperar una tabla oficial nueva. Consulta el [motor propio por lotes](nbastat-identity-automation.md). Los nacimientos están anunciados, aún no observados.
+
 La documentación oficial confirma `GET /api/v1/players/{player_id}` y la lista `/api/v1/players`, pero **no publica el esquema de esos perfiles ni garantiza que incluyan nacimiento o IDs externos**. No se ha realizado una consulta autenticada nueva para esta actualización. Por tanto, todavía no sabemos si el perfil privado 1548 proporciona esos datos.
 
 La fuente NBA.com consultada identifica a Cade Cunningham con **NBA 1630595** y nacimiento **25/09/2001**: https://www.nba.com/player/1630595/cade-cunningham. Eso confirma la identidad canónica; no demuestra por sí solo que NBA Stat 1548 sea el mismo jugador. No se debe copiar esa fecha a «observada en NBA Stat» si no aparece allí.
@@ -39,7 +41,7 @@ Después de revisar el perfil de Cade:
 - Si los perfiles exponen referencias externas explícitas, comprobar si también aparecen en la **lista paginada**. El mismo workflow permite **`players-list`**, una página de hasta cien resultados, filtro opcional por ID **interno NBA Stat** de equipo y sin recorrer páginas automáticamente. No se usa un ID NBA/BDL como `team_id`. Es otra consulta, no un lote de 22 perfiles. El esquema de la lista todavía debe observarse: no se presupone idéntico al detalle.
 - La web admite preparar un lote desde esa lista privada. En el método de referencia explícita selecciona el JSON de inspección descifrado, indica la ruta real del array y las rutas de los IDs **relativas a cada fila**, escoge NBA o ESPN y confirma la semántica de los campos una vez. Pulsa **Preparar lote por IDs explícitos revisados**. El proceso enlaza únicamente IDs externos exactos ya presentes en tus identidades y nacimientos canónicos revisados; no compara nombres ni inventa un nacimiento de NBA Stat. Solo prepara jugadores presentes en el archivo del partido seleccionado. Los IDs desconocidos o nacimientos canónicos no revisados quedan pendientes; IDs internos duplicados bloquean el lote.
 - Los resultados se revisan en la vista previa y se guardan/exportan/importan con el mismo sistema local de correspondencias. Se reutilizan en futuros partidos del jugador, sin otra revisión por encuentro ni cambio de sus datos históricos. El esquema de campos puede reutilizarse después en el recolector, tras verificarlo con datos reales.
-- Si tampoco hay IDs externos en la lista, pedir una **tabla de correspondencias** al proveedor para todos los participantes o toda la liga. El importador de correspondencias admite múltiples entradas y el método de confirmación del proveedor, de modo que una respuesta por lote evita 22 falsos certificados de nacimiento.
+- Si no hay IDs externos, usar el motor propio de propuestas y esperar una muestra real de nacimientos para revisar el esquema y verificar lotes únicos. Nombre y equipo sin evidencia adicional siguen pendientes. No pedir ni esperar una tabla de correspondencias que el proveedor ha descartado.
 
 Texto orientativo para solicitar al proveedor (no se ha enviado):
 
