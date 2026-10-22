@@ -12,10 +12,10 @@ on:
         type: boolean
         default: false
       mode:
-        description: 'Perfil individual primero; lista paginada solo cuando se revise su esquema'
+        description: 'Prueba por lotes: una página de la lista; perfil individual solo si luego es necesario'
         type: choice
         options: [profile, players-list]
-        default: profile
+        default: players-list
       player_id:
         description: 'ID INTERNO NBA Stat (perfil individual)'
         type: string
@@ -25,7 +25,7 @@ on:
         type: string
         default: ''
       page:
-        description: 'Solo lista: una página de hasta 100 jugadores; sin paginación automática'
+        description: 'Solo lista: página 1 primero; se solicita hasta 100, sin paginación ni fallback automático'
         type: string
         default: '1'
 permissions:
