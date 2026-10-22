@@ -1,7 +1,7 @@
 // Offline evidence boundary. Never resolves player identities or initiates HTTP.
 import {readPrivateReview,rejectCredentials} from './import.js';
 import {validateSchedule} from '../schedule.js';
-import {NBA_TEAMS} from '../nba-teams.js';
+import {exactTeamName} from '../nba-teams.js';
 const codes=new Set('ATL BOS BKN CHA CHI CLE DAL DEN DET GSW HOU IND LAC LAL MEM MIA MIL MIN NOP NYK OKC ORL PHI PHX POR SAC SAS TOR UTA WAS'.split(' '));
 const ref=v=>typeof v==='string'&&v.trim().length>=12&&v.length<=500&&!/[\r\n]/.test(v)&&!/(?:token|api_key|password)=/i.test(v);
 const instant=v=>typeof v==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(v)&&Number.isFinite(Date.parse(v));
@@ -9,11 +9,14 @@ const calendarDay=v=>typeof v==='string'&&/^\d{4}-\d\d-\d\d$/.test(v)&&Number.is
 // Exact franchise labels observed in the original rows; never infer NBA Stat IDs from BDL IDs.
 export function observedTeamEvidence(file){
  const {parsed}=readPrivateReview(file);
- return [parsed.game.homeId,parsed.game.awayId].map((sourceId,i)=>{
+ const teams=[parsed.game.homeId,parsed.game.awayId].map((sourceId,i)=>{
   const rows=parsed.players.filter(p=>p.teamId===sourceId),names=[...new Set(rows.map(p=>p.source.team_name))];
-  const match=names.length===1&&NBA_TEAMS.find(t=>t.name===names[0]);
-  return {sourceId,role:i?'away':'home',rows:rows.length,names,code:rows.length&&match?match.id:null,reference:'private-review:data.players.team_id+team_name'};
+  const matched=names.map(exactTeamName),code=matched.length&&matched.every(c=>c&&c===matched[0])?matched[0]:null;
+  return {sourceId,role:i?'away':'home',rows:rows.length,names,code:rows.length?code:null,reference:'private-review:data.players.team_id+team_name'};
  });
+ // Distinct native IDs cannot both establish the same home/away franchise.
+ if(teams[0].code&&teams[0].code===teams[1].code)for(const team of teams)team.code=null;
+ return teams;
 }
 export function inspectGameLink(file,calendar,evidence){
  const {parsed,receivedAt}=readPrivateReview(file);validateSchedule(calendar);rejectCredentials(evidence);

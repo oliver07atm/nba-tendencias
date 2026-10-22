@@ -51,3 +51,18 @@ test('reviewed declared-date link plus verified fictitious player IDs yields exa
   assert.ok(r.batch.records.every(row=>row.date===link.calendar.date&&row.minutes>0));assert.equal(JSON.stringify(f.file),before);
  });
 });
+
+test('all 30 exact official nicknames and full names resolve uniquely, preserving original evidence',async()=>{
+ const {NBA_TEAMS,exactTeamName}=await import('../src/data/nba-teams.js');const {observedTeamEvidence}=await import('../src/data/nbastat/game-links.js');
+ assert.equal(NBA_TEAMS.length,30);assert.equal(new Set(NBA_TEAMS.map(t=>t.nickname)).size,30);
+ for(const team of NBA_TEAMS){const f=fixture(),other=NBA_TEAMS.find(t=>t.id!==team.id);for(const [i,p] of f.file.raw.data.players.entries())p.team_name=String(p.team_id)===String(f.file.raw.data.game.home_team_id)?(i%2?team.name:team.nickname):other.nickname;
+  const before=JSON.stringify(f.file),rows=observedTeamEvidence(f.file);assert.equal(rows[0].code,team.id);assert.equal(rows[1].code,other.id);assert.ok(rows[0].names.includes(team.nickname));assert.ok(rows[0].names.includes(team.name));assert.equal(exactTeamName(team.nickname),team.id);assert.equal(JSON.stringify(f.file),before);
+ }
+ for(const label of ['LA','Los Angeles','New York','Portland','Blazers','Piston','Celtic','pistons',' Pistons ',null,undefined,''])assert.equal(exactTeamName(label),null);
+});
+test('nickname consensus enables only a proposal and does not bypass independent match checks',async()=>{
+ const {observedTeamEvidence}=await import('../src/data/nbastat/game-links.js');
+ const make=()=>{const f=fixture();for(const p of f.file.raw.data.players)p.team_name=String(p.team_id)===String(f.file.raw.data.game.home_team_id)?'Pistons':'Celtics';f.evidence.teamMethod='source-row-consensus';return f;};
+ const f=make();assert.deepEqual(observedTeamEvidence(f.file).map(t=>[t.code,t.rows,t.names]),[['DET',18,['Pistons']],['BOS',17,['Celtics']]]);const proposal=inspectGameLink(f.file,f.calendar,f.evidence);assert.equal(proposal.status,'eligible');assert.throws(()=>approveGameLink(proposal));
+ for(const mutate of [f=>f.file.raw.data.players[0].team_name='Celtics',f=>f.file.raw.data.players[0].team_name='Piston',f=>f.file.raw.data.players.forEach(p=>p.team_name='Pistons'),f=>f.calendar.games[0].homeScore++,f=>f.calendar.games[0].season++,f=>f.calendar.games[0].status='scheduled',f=>Object.assign(f.calendar.games[0],{date:'2026-10-22T00:30:00Z',day:'2026-10-22'}),f=>f.calendar.games.push({...f.calendar.games[0],id:'bdl:game:999998',sourceId:999998})]){const bad=make();mutate(bad);assert.equal(inspectGameLink(bad.file,bad.calendar,bad.evidence).status,'pending');}
+});
