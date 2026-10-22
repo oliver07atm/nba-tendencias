@@ -1,3 +1,4 @@
+import {inspectGameLink,validateGameLink} from './game-links.js';
 // Pure local import boundary. Shared with future server ingestion; no HTTP or storage calls.
 import {decodeNbaStatResponse} from './decoder.js';
 import {prepareNbaStatGame,validateNbaStatMappings} from './updates.js';
@@ -26,7 +27,7 @@ export function mergeNbaStatMappings(base,incoming,{aliases=new Map(),knownKeys=
  return validateNbaStatMappings(out);
 }
 // ONLY game 1369: semantics reported as reviewed by the user, not global provider defaults.
-export function previewPrivate1369(reviewFile,{date,confirmed=false,mappings={version:1,players:[],teams:[]},mappingContext={},checkedAt=new Date().toISOString()}={}){
+export function previewPrivate1369(reviewFile,{date,gameLink=null,calendar=null,confirmed=false,mappings={version:1,players:[],teams:[]},mappingContext={},checkedAt=new Date().toISOString()}={}){
  const {raw,receivedAt,parsed}=readPrivateReview(reviewFile),g=parsed.game,players=parsed.players;
  if(g.sourceGameId!=='1369'||g.homeScore!==121||g.awayScore!==113||players.length!==35)throw Error('El caso revisado exige NBA Stat 1369, Detroit 121–Boston 113 y 35 registros. Otros partidos requieren su propia revisión.');
  const counts=id=>{const rows=players.filter(p=>p.teamId===id);return {total:rows.length,active:rows.filter(p=>p.observed.played===1&&p.observed.status==='ACTIVE').length,inactive:rows.filter(p=>p.observed.played===0&&p.observed.status==='INACTIVE').length};};
@@ -35,6 +36,12 @@ export function previewPrivate1369(reviewFile,{date,confirmed=false,mappings={ve
  for(const p of players)if(p.observed.played===0&&(![null,''].includes(p.observed.minutes)||!String(p.observed.reason||p.observed.description||'').trim()))throw Error('DNP con minutos o motivo no revisados: NBA Stat '+p.sourceId);
  const table=players.map(p=>({sourceId:p.sourceId,name:p.name,team:p.teamId===g.homeId?'DET':'BOS',played:p.observed.played===1,points:p.stats.points,rebounds:p.stats.rebounds,assists:p.stats.assists,threeMade:p.stats.threeMade,minutes:p.observed.minutes,reason:p.observed.reason||p.observed.description||'',linked:mappings.players.some(m=>m.sourceId===p.sourceId)}));
  if(!confirmed)return {ready:false,reason:'REVIEW_REQUIRED',table,parsed};
+ if(gameLink){
+  validateGameLink(gameLink,calendar);
+  const fresh=inspectGameLink(reviewFile,calendar,gameLink.evidence);
+  if(fresh.status!=='eligible'||JSON.stringify(fresh.source)!==JSON.stringify(gameLink.source)||fresh.candidates[0]?.id!==gameLink.calendar.id)throw Error('El enlace revisado no corresponde al archivo seleccionado.');
+  date=gameLink.calendar.date; // BDL reference for ordering, never an inferred NBA Stat UTC time.
+ }
  if(!iso(date)||Date.parse(date)<Date.parse('2026-10-20T00:00:00Z')||Date.parse(date)>=Date.parse('2026-10-22T00:00:00Z'))throw Error('Revisa la fecha/hora UTC del partido, con formato ISO terminado en Z. No se adivina la zona de scheduled.');
  const scopedTeams={version:1,players:[],teams:[[g.homeId,'DET'],[g.awayId,'BOS']].map(([sourceId,team])=>({sourceId,team,checkedAt,sourceUrl:'https://nbastat.io/api/v1/teams/'+sourceId}))};
  // Reuse an identical reviewed team mapping instead of generating an equal-date conflict.

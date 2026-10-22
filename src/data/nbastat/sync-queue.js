@@ -26,7 +26,7 @@ export function validateSyncState(s){
  for(const b of Object.values(s.updates.games))applyNbaStatGame(emptyNbaStatUpdates(),b);
  return s;
 }
-function calendarFields(g,at){return Object.fromEntries(['id','home','away','date','day','status','homeScore','awayScore','season','competition'].map(k=>[k,g[k]]).concat([['observedAt',g.observedAt||at]]));}
+function calendarFields(g,at){return Object.fromEntries(['id','home','away','date','day','status','homeScore','awayScore','season','competition',...(g.sourceDate!==undefined?['sourceDate']:[])].map(k=>[k,g[k]]).concat([['observedAt',g.observedAt||at]]));}
 const changed=(a,b)=>['home','away','date','day','homeScore','awayScore','competition','season'].some(k=>a[k]!==b[k]);
 export function reconcileSyncCalendar(state,input){
  validateSyncState(state);const calendar=validateSchedule(input);if(!calendar.meta.updatedAt)return state;
