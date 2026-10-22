@@ -1,0 +1,49 @@
+// Offline evidence boundary. Never resolves player identities or initiates HTTP.
+import {readPrivateReview,rejectCredentials} from './import.js';
+import {validateSchedule} from '../schedule.js';
+const codes=new Set('ATL BOS BKN CHA CHI CLE DAL DEN DET GSW HOU IND LAC LAL MEM MIA MIL MIN NOP NYK OKC ORL PHI PHX POR SAC SAS TOR UTA WAS'.split(' '));
+const ref=v=>typeof v==='string'&&v.trim().length>=12&&v.length<=500&&!/[\r\n]/.test(v)&&!/(?:token|api_key|password)=/i.test(v);
+const instant=v=>typeof v==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(v)&&Number.isFinite(Date.parse(v));
+export function inspectGameLink(file,calendar,evidence){
+ const {parsed,receivedAt}=readPrivateReview(file);validateSchedule(calendar);rejectCredentials(evidence);
+ const g=parsed.game,o=parsed.observed.game,reasons=[];
+ const teams=evidence?.teams||[];
+ const team=id=>{const found=teams.filter(t=>String(t.sourceId)===id&&codes.has(t.code)&&ref(t.reference));return found.length===1?found[0].code:null;};
+ const home=team(g.homeId),away=team(g.awayId);
+ if(!home||!away||home===away)reasons.push('TEAM_EVIDENCE_MISSING');
+ if(evidence?.version!==1||!ref(evidence?.provenanceReference)||!ref(evidence?.semanticsReference))reasons.push('INDEPENDENT_PROVENANCE_OR_SEMANTICS_MISSING');
+ // Meaning of these literal values must have been reviewed from NBA Stat, not copied from BDL.
+ if(!evidence||evidence.finalStatus!==o.status||evidence.seasonValue!==o.season||!Number.isInteger(evidence.seasonYear)||evidence.competition!=='NBA')reasons.push('STATUS_OR_SEASON_UNVERIFIED');
+ if(!instant(o.scheduled))reasons.push('SOURCE_TIMEZONE_UNRESOLVED');
+ if(parsed.diagnostics.issues.length||!parsed.diagnostics.pointTotalsMatch)reasons.push('BOXSCORE_INCONSISTENT');
+ const candidates=calendar.games.filter(c=>c.home===home&&c.away===away&&c.homeScore===g.homeScore&&c.awayScore===g.awayScore&&c.season===evidence?.seasonYear&&c.competition==='NBA'&&c.status==='final'&&instant(c.date)&&instant(o.scheduled)&&Date.parse(c.date)===Date.parse(o.scheduled));
+ if(candidates.length!==1)reasons.push(candidates.length?'AMBIGUOUS_CALENDAR_MATCH':'NO_EXACT_CALENDAR_MATCH');
+ return {version:1,status:reasons.length?'pending':'eligible',reasons,sourceId:g.sourceGameId,receivedAt,synthetic:file.synthetic===true,source:{...g,...o},candidates:candidates.map(c=>({...c})),evidence:evidence?structuredClone(evidence):null};
+}
+export function approveGameLink(result,{confirmed=false,checkedAt=new Date().toISOString()}={}){
+ if(!confirmed||result.status!=='eligible'||result.reasons.length||result.candidates.length!==1||!instant(checkedAt))throw Error('Evidencias insuficientes: el enlace sigue pendiente.');
+ return {version:1,status:'locally-reviewed',checkedAt,synthetic:result.synthetic,sourceId:result.sourceId,source:result.source,receivedAt:result.receivedAt,evidence:result.evidence,calendar:result.candidates[0]};
+}
+// Re-evaluate exports against both source facts and the current calendar; status alone is never trusted.
+export function validateGameLink(link,calendar){
+ rejectCredentials(link);
+ if(link?.version!==1||link.status!=='locally-reviewed'||!instant(link.checkedAt)||!ref(link.evidence?.provenanceReference)||!ref(link.evidence?.semanticsReference)||!instant(link.source?.scheduled)||link.source.sourceGameId!==link.sourceId)throw Error('Registro de enlace inválido.');
+ validateSchedule(calendar);
+ const c=calendar.games.find(g=>g.id===link.calendar?.id),s=link.source,e=link.evidence;
+ const code=id=>e.teams.filter(t=>String(t.sourceId)===id&&codes.has(t.code)&&ref(t.reference));
+ const h=code(s.homeId),a=code(s.awayId);
+ if(!c||h.length!==1||a.length!==1||c.home!==h[0].code||c.away!==a[0].code||c.home===c.away||c.homeScore!==s.homeScore||c.awayScore!==s.awayScore||c.status!=='final'||c.season!==e.seasonYear||c.competition!=='NBA'||e.competition!=='NBA'||e.finalStatus!==s.status||e.seasonValue!==s.season||Date.parse(c.date)!==Date.parse(s.scheduled)||['id','home','away','date','homeScore','awayScore','season','status','competition'].some(k=>c[k]!==link.calendar[k]))throw Error('El calendario o las evidencias han cambiado: revisar de nuevo.');
+ return link;
+}
+export function mergeGameLinks(existing,incoming,calendar){
+ const out=structuredClone(existing);
+ for(const link of incoming){validateGameLink(link,calendar);const conflict=out.find(l=>(l.sourceId===link.sourceId)!==(l.calendar.id===link.calendar.id));if(conflict)throw Error('Correspondencia contradictoria: IDs no unívocos.');const i=out.findIndex(l=>l.calendar.id===link.calendar.id);if(i>=0&&Date.parse(out[i].checkedAt)>Date.parse(link.checkedAt))throw Error('Revisión antigua.');if(i>=0)out[i]=structuredClone(link);else out.push(structuredClone(link));}return out;
+}
+export function queueGameLink(link,calendar){validateGameLink(link,calendar);if(link.synthetic)throw Error('Enlace ficticio excluido de la cola real.');const c=link.calendar;return {calendarId:c.id,sourceId:link.sourceId,status:'reviewed',checkedAt:link.checkedAt,date:c.date,home:c.home,away:c.away,season:c.season+'-'+String(c.season+1).slice(-2),competition:c.competition,evidenceUrl:'https://nbastat.io/api/v1/games/'+link.sourceId+'/boxscore'};}
+// Offline batches reuse reviewed provider semantics/team evidence; no name-based matching.
+// Eligibility is a proposal, never an approval. One-to-one checks include the whole batch.
+export function inspectGameLinkBatch(files,calendar,evidence){
+ const results=files.map(file=>inspectGameLink(file,calendar,evidence));
+ for(const r of results){if(results.filter(x=>x.sourceId===r.sourceId).length>1||r.candidates.length===1&&results.filter(x=>x.candidates.some(c=>c.id===r.candidates[0].id)).length>1){r.reasons.push('BATCH_ID_CONFLICT');r.status='pending';}}
+ return results;
+}
