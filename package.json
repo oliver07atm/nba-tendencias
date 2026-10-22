@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
+    "build": "node scripts/validate-public-nbastat.mjs && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node tests/engine.test.js && node tests/hoopr.test.js && node tests/local-history.test.js && node tests/schedule.test.js && node tests/rosters-routes.test.js && node tests/player-directory.test.js && node tests/trends.test.js && node tests/stats-coverage.test.js && node tests/calendar-season.test.js && node tests/nbastat.test.js && node tests/nbastat-probe.test.js && node tests/nbastat-values.test.js && node tests/nbastat-import.test.js && node tests/nbastat-identity-evidence.test.js && node tests/nbastat-sync-queue.test.js && node tests/searchable-select.test.js && node tests/nbastat-shared-quota.test.js && node tests/synthetic-delivery.test.js && node tests/game-links.test.js && node tests/identity-proposals.test.js && node tests/birth-diagnostic.test.js",
+    "test": "node tests/engine.test.js && node tests/hoopr.test.js && node tests/local-history.test.js && node tests/schedule.test.js && node tests/rosters-routes.test.js && node tests/player-directory.test.js && node tests/trends.test.js && node tests/stats-coverage.test.js && node tests/calendar-season.test.js && node tests/nbastat.test.js && node tests/nbastat-probe.test.js && node tests/nbastat-values.test.js && node tests/nbastat-import.test.js && node tests/nbastat-identity-evidence.test.js && node tests/nbastat-sync-queue.test.js && node tests/searchable-select.test.js && node tests/nbastat-shared-quota.test.js && node tests/synthetic-delivery.test.js && node tests/game-links.test.js && node tests/identity-proposals.test.js && node tests/birth-diagnostic.test.js && node tests/public-delivery.test.js",
     "update-data": "node scripts/update-data.mjs",
     "import:hoopr": "node scripts/import-hoopr.mjs",
     "update-calendar": "node scripts/update-calendar.mjs"

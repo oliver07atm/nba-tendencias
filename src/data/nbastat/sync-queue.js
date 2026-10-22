@@ -78,6 +78,7 @@ export function validateSyncDownload(state,key,{review,mappings,mappingContext={
  try{
   const d=decodeNbaStatResponse(j.download.body,{review,receivedAt:j.download.receivedAt,synthetic:j.download.synthetic===true});
   if(!d.ready){j.phase='blocked-validation';j.lastError=d.reason;j.pending=d.pending||[];return next;}
+  j.semanticReview=structuredClone(Object.fromEntries(['status','gameFinal','complete','evidenceUrl','checkedAt','sourceGameId','observedGame','date','season','competition','minutesFormat','dnpMinutes','participation'].map(k=>[k,review[k]])));
   const g=d.contract.game,teams=new Map(mappings.teams.map(t=>[t.sourceId,t.team]));
   if(d.contract.sourceGameId!==j.link.sourceId||teams.get(g.homeId)!==j.calendar.home||teams.get(g.awayId)!==j.calendar.away||g.homeScore!==j.calendar.homeScore||g.awayScore!==j.calendar.awayScore||canaryDay(g.date)!==j.calendar.day||g.season!==season(state.year)||g.competition!==j.calendar.competition)throw Error('CALENDAR_BOX_SCORE_MISMATCH');
   const batch=prepareNbaStatGame(d.contract,mappings); // Automatic path never weakens the full-game gate for pending identities.
