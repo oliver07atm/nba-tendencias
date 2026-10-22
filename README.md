@@ -162,3 +162,5 @@ Se ha preparado una [cola incremental NBA Stat desactivada](docs/nbastat-cola-in
 La [auditoría de privacidad de la persistencia NBA Stat](docs/nbastat-persistencia-auditoria.md) retira el adaptador de checkpoints sobre el repositorio público. La alternativa privada no está desplegada y la sincronización sigue desactivada.
 
 [Guía del buscador de jugadores y sus pruebas](docs/buscador-jugadores.md).
+
+La [prueba integral de entrega ficticia](docs/prueba-entrega-ficticia.md) comprueba el paquete local del recolector privado en el motor y los gráficos reales de localhost. No añade un consumidor de datos en producción ni publica los fixtures como estadísticas. El receptor exige modo de prueba explícito.

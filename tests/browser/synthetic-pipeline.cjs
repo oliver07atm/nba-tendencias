@@ -1,0 +1,25 @@
+// Local Vite test only. Fresh ephemeral profiles; no access to the user's browser or real NBA data.
+const{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');const assert=require('assert/strict'),fs=require('fs');
+(async()=>{
+ const packet=JSON.parse(fs.readFileSync('work/integration-fixture/delivery.json','utf8'));assert.equal(packet.kind,'nba-tendencias-synthetic-delivery-v1');assert.equal(packet.synthetic,true);assert.equal(packet.games.length,1);assert.ok(packet.games[0].records.every(r=>r.entity.startsWith('Jugador FICTICIO')));
+ const root=process.env.LOCAL_APP_URL||'http://localhost:5181/nba-tendencias/',url=new URL(root);assert.ok(['localhost','127.0.0.1'].includes(url.hostname));
+ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
+ try{for(const mobile of[false,true]){
+  const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1360,height:900}});const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await context.route('**/*',route=>{const target=new URL(route.request().url());if(target.origin!==url.origin)return route.abort();if(target.pathname.endsWith('/data/rosters.json'))return route.fulfill({status:404,body:'No roster in fictitious test'});if(target.pathname.endsWith('/data/schedule.json'))return route.fulfill({json:{meta:{source:'BALLDONTLIE',updatedAt:'2031-01-03T01:00:00Z'},games:[]}});return route.continue();});
+  await page.goto(root+'#/datos');await page.locator('.app').waitFor();
+  const baseHashes=await page.evaluate(async({packet,path})=>{
+   const module=p=>import(path+p);const {syntheticDeliveryHistory}=await module('tests/fixtures/synthetic-delivery-history.js');const{saveHistory,loadHistory}=await module('src/data/history-store.js');const{loadRosters}=await module('src/data/roster-store.js');const{loadDirectory}=await module('src/data/directory-store.js');
+   await saveHistory(syntheticDeliveryHistory(packet));return JSON.stringify([await loadHistory(),await loadRosters(),await loadDirectory()]);
+  },{packet,path:url.pathname});
+  await page.goto(root+'#/jugadores/nba%3Aplayer%3A990101?stat=points&line=19.5&limit=20');await page.reload();await page.waitForFunction(()=>document.querySelector('.results h3')?.textContent==='0 de 1 partidos');
+  await page.evaluate(async({packet,path})=>{const{acceptSyntheticDelivery}=await import(path+'src/data/nbastat/synthetic-delivery.js');const{loadNbaStatSnapshot,saveNbaStatSnapshot}=await import(path+'src/data/nbastat/store.js');const state=await loadNbaStatSnapshot();const result=acceptSyntheticDelivery(state.updates,packet,{testMode:true});await saveNbaStatSnapshot({...state,updates:result.updates},state.revision);},{packet,path:url.pathname});
+  await page.reload();await page.waitForFunction(()=>document.querySelector('.results h3')?.textContent==='1 de 2 partidos');
+  assert.ok(await page.locator('.recharts-bar-rectangle').count()>=2);assert.equal((await page.locator('.history tbody tr').first().locator('td').nth(5).textContent()).trim(),'20');assert.equal((await page.locator('.percentage').textContent()).trim(),'50%');
+  for(const[stat,value]of Object.entries({rebounds:4,assists:3,threeMade:1,pra:27,pr:24,pa:23,ra:7})){await page.getByLabel('Estadística',{exact:true}).selectOption(stat);await page.waitForFunction(v=>document.querySelector('.history tbody tr td:nth-child(6)')?.textContent.trim()===String(v),value);}
+  for(const limit of['5','10','15','20','100','200']){await page.getByLabel('Muestra',{exact:true}).selectOption(limit);assert.equal(await page.locator('.history tbody tr').count(),2);}
+  const repeated=await page.evaluate(async({packet,path})=>{const{acceptSyntheticDelivery}=await import(path+'src/data/nbastat/synthetic-delivery.js');const{loadNbaStatSnapshot,saveNbaStatSnapshot}=await import(path+'src/data/nbastat/store.js');const state=await loadNbaStatSnapshot(),next=acceptSyntheticDelivery(state.updates,packet,{testMode:true});await saveNbaStatSnapshot({...state,updates:next.updates},state.revision);return next.changes;},{packet,path:url.pathname});assert.equal(repeated[0].reason,'DUPLICATE');
+  await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.history tbody tr').length===2);
+  const after=await page.evaluate(async path=>{const{loadHistory}=await import(path+'src/data/history-store.js'),{loadRosters}=await import(path+'src/data/roster-store.js'),{loadDirectory}=await import(path+'src/data/directory-store.js');return JSON.stringify([await loadHistory(),await loadRosters(),await loadDirectory()]);},url.pathname);assert.equal(after,baseHashes);assert.deepEqual(errors,[]);await context.close();
+ }console.log('PASS desktop/mobile: actual app chart, points 20, PRA 27, windows 5/10/15/20/100/200, DNP excluded, duplicate delivery and 3 original fixture stores unchanged');}finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exit(1)});
