@@ -1,6 +1,7 @@
 import React,{useState,useMemo} from 'react';
+import SharedHistory from './SharedHistory.jsx';
 import {Database,Upload,Download,Save,Trash2,RotateCcw,HardDrive,CheckCircle2} from 'lucide-react';
-export default function PersonalHistory({history,persisted,active,storageMessage,busy,progress,importMessage,remember,setRemember,combine,setCombine,onImportSeason,onSave,onUse,onDemo,onDelete,onExport}){
+export default function PersonalHistory({history,persisted,active,storageMessage,busy,progress,importMessage,remember,setRemember,combine,setCombine,onImportSeason,onSave,onUse,onDemo,onDelete,onExport,onLoadShared}){
  const [files,setFiles]=useState({players:null,teams:null,schedule:null}),[confirmDelete,setConfirmDelete]=useState(false),[localError,setLocalError]=useState('');
  const choose=(key,file)=>{setLocalError('');setFiles(f=>({...f,[key]:file}));};
  const {seasons,counts}=useMemo(()=>{
@@ -9,7 +10,7 @@ export default function PersonalHistory({history,persisted,active,storageMessage
   return {seasons:[...years].sort().reverse(),counts:{players:players.size,records:history.dataset.records.length}};
  },[history?.dataset]);
  async function convert(e){e.preventDefault();const form=e.currentTarget;if(!Object.values(files).every(Boolean)){setLocalError('Selecciona un CSV de jugadores, uno de equipos y uno de calendario.');return;}const ok=await onImportSeason(files);if(ok){for(const input of form.querySelectorAll('input[type=file]'))input.value='';setFiles({players:null,teams:null,schedule:null});}}
- return <section className="panel personal-history" aria-labelledby="personal-history-title">
+ return <><section className="panel personal-history" aria-labelledby="personal-history-title">
   <div className="section-heading"><div><div className="eyebrow">TU ARCHIVO PERSONAL · 0 €</div><h2 id="personal-history-title"><HardDrive size={21}/> Importar estadísticas NBA desde CSV</h2></div><span className="subtle-pill">Solo en este navegador</span></div>
   <p>Selecciona los tres archivos de una misma temporada. La conversión se realiza en tu dispositivo: no se envían archivos ni estadísticas a ningún servidor.</p>
   <form onSubmit={convert}>
@@ -31,5 +32,5 @@ export default function PersonalHistory({history,persisted,active,storageMessage
    {history?.report&&<details className="import-report"><summary>Ver informe de la última importación CSV</summary><p>Temporada: {history.report.output.seasons.join(', ')}. {history.report.output.players.toLocaleString('es-ES')} actuaciones de jugadores; {history.report.output.games.toLocaleString('es-ES')} partidos compatibles. {history.report.addedRecords.toLocaleString('es-ES')} registros añadidos y {history.report.duplicates.toLocaleString('es-ES')} duplicados evitados.</p><ul><li>DNP excluidos: {history.report.excluded.dnp.toLocaleString('es-ES')}</li><li>Partidos especiales excluidos: {history.report.excluded.nonNbaGames.toLocaleString('es-ES')}</li><li>Partidos incompletos o incompatibles: {history.report.excluded.incompleteGames.toLocaleString('es-ES')}</li><li>Actuaciones sin estadísticas obligatorias: {history.report.excluded.missingPlayerStats.toLocaleString('es-ES')}</li><li>Actuaciones sin partido compatible: {history.report.excluded.unmatchedPlayers.toLocaleString('es-ES')}</li></ul>{history.report.rejections?.length>0&&<><h4>Motivos de exclusión (recuento completo)</h4><ul>{history.report.rejections.map((r,i)=><li key={i}>{r.scope==='games'?'Partidos':'Actuaciones'}: {r.count.toLocaleString('es-ES')} — {r.reason}</li>)}</ul></>}{history.report.issuesCount>0&&<p>Incidencias detectadas: {history.report.issuesCount}. {history.report.issues.slice(0,3).map(i=>`${i.gameId}: ${i.message}`).join(' · ')}</p>}</details>}
   </div>
   <p className="muted personal-help">Para llevarlo al iPhone, exporta el JSON, guárdalo en Archivos y selecciónalo allí desde «Importar JSON o CSV». Cada navegador guarda su propia copia; no hay sincronización automática. Borrar los datos del sitio o usar navegación privada puede eliminar el guardado. Conserva una copia JSON y utiliza archivos cuyo uso tengas permitido.</p>
- </section>;
+ </section><SharedHistory history={history} onLoadDataset={onLoadShared}/></>;
 }

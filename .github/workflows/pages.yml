@@ -41,7 +41,11 @@ jobs:
           BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
         run: npm run update-calendar
       - run: npm test
-      - run: npm run build
+      - name: Build application
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: npm run build
       - name: Conservar únicamente el calendario público para futuras actualizaciones
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         shell: bash

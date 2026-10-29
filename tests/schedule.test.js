@@ -64,7 +64,7 @@ test('Calendario y tendencias usan el historial sin mutarlo ni sustituirlo; no i
  const personal={...d,records},before=JSON.stringify(personal),calendar={games:[normalizeGame(raw())]};const schedule=upcomingGames(calendar,now);
  assert.equal(filterRows(personal.records,{entity:player.entityId,limit:200}).length,200);assert.ok(detectTrends({...personal,schedule},200).length>0);assert.equal(JSON.stringify(personal),before);assert.equal(JSON.stringify(d),original);assert.equal(personal.schedule.length,0);
 });
-test('El secreto solo está enlazado al actualizador de Actions; estadísticas automáticas siguen apagadas',()=>{
- const wf=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');assert.match(wf,/BALLDONTLIE_API_KEY: \$\{\{ secrets.BALLDONTLIE_API_KEY \}\}/);assert.doesNotMatch(wf,/VITE_.*KEY|DATA_SOURCE_ENABLED/);
+test('Los secretos no se publican en el cliente; se permite la clave publicable de Supabase y las estadísticas automáticas siguen apagadas',()=>{
+ const wf=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');assert.match(wf,/BALLDONTLIE_API_KEY: \$\{\{ secrets.BALLDONTLIE_API_KEY \}\}/);assert.doesNotMatch(wf,/^\s*VITE_(?!SUPABASE_PUBLISHABLE_KEY\s*:)[^\n]*KEY\s*:/m);assert.doesNotMatch(wf,/DATA_SOURCE_ENABLED/);assert.match(wf,/VITE_SUPABASE_PUBLISHABLE_KEY: \$\{\{ vars\.VITE_SUPABASE_PUBLISHABLE_KEY \}\}/);
  assert.equal(JSON.parse(readFileSync(new URL('../data-source.json',import.meta.url))).enabled,false);
 });
